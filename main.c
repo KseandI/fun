@@ -9,6 +9,7 @@ enum KEYCODES
     KEY_B = SDL_SCANCODE_B,
     KEY_N = SDL_SCANCODE_N,
     KEY_P = SDL_SCANCODE_P,
+    KEY_SEMICOLON = SDL_SCANCODE_SEMICOLON,
     KEYS_LEN = SDL_NUM_SCANCODES
   };
 typedef enum KEYCODES KEYCODES;
@@ -53,26 +54,26 @@ typedef struct Entity
 
 typedef struct Player
 {
-  Entity ent;
+  Entity* ent;
   Float speed;
   Vec2f pos;
 } Player;
 
 typedef struct Camera
 {
-  Entity ent;
+  Entity* ent;
   Float speed;
   Vec2f pos;
 } Camera;
 
 typedef struct Controller
 {
-  BigUint control_uid;
+  Bool state;
 } Controller;
 
 typedef struct Game
 {
-  Entity ent;
+  Entity* ent;
   Player* player;
   Camera* camera;
   Controller* control;
@@ -144,12 +145,20 @@ uid_new(None)
   return last_uid++;
 }
 
-Entity
+Entity*
 entity_new(None)
 {
-  Entity ent;
+  Entity* ent;
 
-  ent.uid = uid_new();
+  ent = (Entity*) malloc(sizeof(Entity));
+
+  if (ent == null)
+    {
+      fprintf(stderr, "Error, can't allocate new entity (base class)\n");
+      return null;
+    }
+
+  ent->uid = uid_new();
 
   return ent;
 }
@@ -208,6 +217,22 @@ game_new(None)
   return game;
 }
 
+Controller*
+controller_new(None)
+{
+  Controller* control;
+
+  control = (Controller*) malloc(sizeof(Controller));
+
+  if (control == null)
+    {
+      fprintf(stderr, "Error, can't allocate new controller\n");
+      return null;
+    }
+
+  return control;
+}
+
 Int
 game_init(None)
 {
@@ -217,30 +242,74 @@ game_init(None)
   glob_game->player->speed = 0x0.01p0;
   /* Camera config */
   glob_game->camera = camera_new();
-  glob_game->camera->speed = 0x0.08p9;
+  glob_game->camera->speed = 0x0.08p0;
   /* Controller config */
   glob_game->control = controller_new();
-  glob_game->control->control_uid = glob_game->camera->ent.uid;
+  glob_game->control->state = true;
   
   is_running = 0x1;
   return 0x0;
 }
 
 Int
+controller_process(None)
+{
+  Controller* cont;
+  Vec2f* cpos;
+  Float speed;
+
+  /* TODO: Add safe check */
+  cont = glob_game->control;
+  
+
+  cpos = cont->state?
+    &(glob_game->camera->pos):
+    &(glob_game->player->pos);
+
+  speed = cont->state?
+    glob_game->camera->speed:
+    glob_game->player->speed;
+
+  fprintf(stdout, "speed: %lf\n", speed);
+
+  if (input_keys[KEY_F])
+    cpos->x += speed;
+  if (input_keys[KEY_B])
+    cpos->x -= speed;
+  if (input_keys[KEY_N])
+    cpos->y += speed;
+  if (input_keys[KEY_P])
+    cpos->y -= speed;
+  if (input_keys[KEY_SEMICOLON])
+    cont->state = !cont->state;
+  
+  return 0x0;
+}
+
+Int
 game_logic(None)
 {
+  controller_process();
   
   /* Draw player */
   SDL_Rect rect;
   rect = (SDL_Rect)
     {
-      .x = glob_game->player->pos.x,
-      .y = glob_game->player->pos.y,
+      .x = glob_game->player->pos.x-glob_game->camera->pos.x,
+      .y = glob_game->player->pos.y-glob_game->camera->pos.y,
       .w = 0x10,
       .h = 0x10,
     };
   SDL_SetRenderDrawColor(sdlrender, 0x00, 0xff, 0x00, 0xff);
   SDL_RenderDrawRect(sdlrender, &rect);
+
+  fprintf(stdout, "State: %d\ncam: %lf %lf\nplr: %lf %lf\n",
+          glob_game->control->state,
+          glob_game->camera->pos.x,
+          glob_game->camera->pos.y,
+          glob_game->player->pos.x,
+          glob_game->player->pos.y
+          );
 
   return 0x0;
 }
