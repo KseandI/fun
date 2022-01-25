@@ -5,6 +5,7 @@
 enum KEYCODES
   {
     KEY_NONE = 0x0,
+    KEY_F11 = SDL_SCANCODE_F11,
     KEY_F = SDL_SCANCODE_F,
     KEY_B = SDL_SCANCODE_B,
     KEY_N = SDL_SCANCODE_N,
@@ -100,9 +101,32 @@ SDL_Renderer* sdlrender = null;
 Game* glob_game = null;
 
 Bool is_running = false;
+Bool isFullScreen = false;
 
 /* Input manager's keys */
 Bool input_keys[KEYS_LEN] = { 0x0 };
+
+
+Int
+toggleFullScreen(SDL_Window* window)
+{
+  isFullScreen = !isFullScreen;
+
+  SDL_SetWindowFullscreen(window, !isFullScreen);
+  SDL_ShowCursor(isFullScreen);
+
+  return 0x0;
+}
+
+Int
+drawObject(SDL_Renderer* render, Int* objMatr[3][2], Int coll)
+{
+  for(Int i = 0;i<coll-1;++i){
+    SDL_RenderDrawLine(render, objMatr[i][0], objMatr[i][1], objMatr[i+1][0], objMatr[i+1][1]);
+  }
+
+  return 0x0;
+}
 
 Int
 render_init(None)
@@ -117,7 +141,7 @@ render_init(None)
                             SDL_WINDOWPOS_UNDEFINED,
                             0x800,
                             0x800,
-                            SDL_WINDOW_RESIZABLE);
+                            SDL_WINDOW_FULLSCREEN);
   if (sdlwin == NULL)
     {
       fprintf(stderr, "Error, can't create window:\n  %s\n", SDL_GetError());
@@ -249,6 +273,7 @@ game_init(None)
   glob_game->control->state = true;
   
   is_running = true;
+  toggleFullScreen(sdlwin);
   return 0x0;
 }
 
@@ -271,6 +296,8 @@ controller_process(None)
     glob_game->camera->speed:
     glob_game->player->speed;
 
+  if (input_keys[KEY_F11])
+    toggleFullScreen(sdlwin);
   if (input_keys[KEY_F])
     cpos->x += speed;
   if (input_keys[KEY_B])
@@ -337,7 +364,6 @@ main(None)
     }
 
   game_init();
-
   while (is_running)
     {
       SDL_Event event;
@@ -365,7 +391,9 @@ main(None)
       SDL_RenderClear(sdlrender);
 
       game_logic();
-      
+        SDL_RenderDrawLine(sdlrender, 0,0,10,10);
+      //int a[3][2] = {{0,0}, {10,10}, {0,20}};
+      //drawObject(sdlrender, a, 3);
       SDL_RenderPresent(sdlrender);
     }
 
