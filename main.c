@@ -291,10 +291,8 @@ controller_process(None)
 }
 
 Int
-game_logic(None)
+render_game(None)
 {
-  controller_process();
-  
 
   /* TODO: Add more effective window size vars */
   Int w, h;
@@ -324,6 +322,17 @@ game_logic(None)
     };
   SDL_SetRenderDrawColor(sdlrender, 0x00, 0xff, 0x00, 0xff);
   SDL_RenderDrawRect(sdlrender, &plr_rect);
+    
+  return 0x0;
+}
+
+Int
+game_logic(None)
+{
+  controller_process();
+
+  render_game();
+  
   return 0x0;
 }
 
