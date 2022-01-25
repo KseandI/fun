@@ -9,6 +9,7 @@ enum KEYCODES
     KEY_B = SDL_SCANCODE_B,
     KEY_N = SDL_SCANCODE_N,
     KEY_P = SDL_SCANCODE_P,
+    KEY_Q = SDL_SCANCODE_Q,
     KEY_SEMICOLON = SDL_SCANCODE_SEMICOLON,
     KEYS_LEN = SDL_NUM_SCANCODES
   };
@@ -98,7 +99,7 @@ SDL_Renderer* sdlrender = null;
 
 Game* glob_game = null;
 
-Bool is_running = 0x0;
+Bool is_running = false;
 
 /* Input manager's keys */
 Bool input_keys[KEYS_LEN] = { 0x0 };
@@ -247,7 +248,7 @@ game_init(None)
   glob_game->control = controller_new();
   glob_game->control->state = true;
   
-  is_running = 0x1;
+  is_running = true;
   return 0x0;
 }
 
@@ -270,8 +271,6 @@ controller_process(None)
     glob_game->camera->speed:
     glob_game->player->speed;
 
-  fprintf(stdout, "speed: %lf\n", speed);
-
   if (input_keys[KEY_F])
     cpos->x += speed;
   if (input_keys[KEY_B])
@@ -280,8 +279,13 @@ controller_process(None)
     cpos->y += speed;
   if (input_keys[KEY_P])
     cpos->y -= speed;
-  if (input_keys[KEY_SEMICOLON])
-    cont->state = !cont->state;
+  if (input_keys[KEY_SEMICOLON] == 0x1)
+    {
+      cont->state = !cont->state;
+      input_keys[KEY_SEMICOLON] = 0x2;
+    }
+  if (input_keys[KEY_Q])
+    is_running = false;
   
   return 0x0;
 }
@@ -291,9 +295,27 @@ game_logic(None)
 {
   controller_process();
   
+
+  /* TODO: Add more effective window size vars */
+  Int w, h;
+  SDL_GetWindowSize(sdlwin, &w, &h);
+
+  
+  /* Lines */
+  SDL_SetRenderDrawColor(sdlrender, 0xff, 0x00, 0x00, 0xff);
+  /* Horz */
+  SDL_RenderDrawLine(sdlrender,
+                     0x0, -glob_game->camera->pos.y,
+                     w, -glob_game->camera->pos.y);
+  /* Vert */
+  SDL_RenderDrawLine(sdlrender,
+                     -glob_game->camera->pos.x, 0x0,
+                     -glob_game->camera->pos.x, h);
+
+  
   /* Draw player */
-  SDL_Rect rect;
-  rect = (SDL_Rect)
+  SDL_Rect plr_rect;
+  plr_rect = (SDL_Rect)
     {
       .x = glob_game->player->pos.x-glob_game->camera->pos.x,
       .y = glob_game->player->pos.y-glob_game->camera->pos.y,
@@ -301,16 +323,7 @@ game_logic(None)
       .h = 0x10,
     };
   SDL_SetRenderDrawColor(sdlrender, 0x00, 0xff, 0x00, 0xff);
-  SDL_RenderDrawRect(sdlrender, &rect);
-
-  fprintf(stdout, "State: %d\ncam: %lf %lf\nplr: %lf %lf\n",
-          glob_game->control->state,
-          glob_game->camera->pos.x,
-          glob_game->camera->pos.y,
-          glob_game->player->pos.x,
-          glob_game->player->pos.y
-          );
-
+  SDL_RenderDrawRect(sdlrender, &plr_rect);
   return 0x0;
 }
 
@@ -333,10 +346,12 @@ main(None)
           switch (event.type)
             {
             case SDL_QUIT:
-              is_running = 0x0;
+              is_running = false;
               break;
             case SDL_KEYDOWN:
-              input_keys[event.key.keysym.scancode] = 0x1;
+              input_keys[event.key.keysym.scancode] =
+                input_keys[event.key.keysym.scancode]==0x0?
+                0x1:input_keys[event.key.keysym.scancode];
               break;
             case SDL_KEYUP:
               input_keys[event.key.keysym.scancode] = 0x0;
