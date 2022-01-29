@@ -1,411 +1,79 @@
 
-#include <stdint.h>
-#include <SDL2/SDL.h>
+#include <GL/gl.h>
+#include <GLFW/glfw3.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-enum KEYCODES
-  {
-    KEY_NONE = 0x0,
-    KEY_F11 = SDL_SCANCODE_F11,
-    KEY_F = SDL_SCANCODE_F,
-    KEY_B = SDL_SCANCODE_B,
-    KEY_N = SDL_SCANCODE_N,
-    KEY_P = SDL_SCANCODE_P,
-    KEY_Q = SDL_SCANCODE_Q,
-    KEY_SEMICOLON = SDL_SCANCODE_SEMICOLON,
-    KEYS_LEN = SDL_NUM_SCANCODES
-  };
-typedef enum KEYCODES KEYCODES;
+#include "types.h"
+#include "error_codes.h"
 
-/* Common types */
-/*   Integers */
-typedef int32_t Int;
-typedef int_least64_t BigInt;
-typedef uint32_t Uint;
-typedef uint_least64_t BigUint;
+#define _STR(X) #X
+#define STR(X) _STR(X)
 
-/*   Floating points */
-
-typedef float SmallFloat;
-typedef double Float;
-
-/*   Bool */
-typedef uint_fast8_t Bool;
-#define true 0x1
-#define false 0x0
-
-/*   None */
-typedef void None;
-
-/*   Pointer */
-typedef void* Ptr;
-
-/*   NULL */
-#define null 0x0
-
-/* === */
-
-typedef struct Vec2f
+typedef struct GameSystem
 {
-  Float x, y;
-} Vec2f;
+  GLFWwindow* window;
+} GameSystem;
 
-typedef struct Entity
-{
-  BigUint uid;
-} Entity;
-
-typedef struct Player
-{
-  Entity* ent;
-  Float speed;
-  Vec2f pos;
-} Player;
-
-typedef struct Camera
-{
-  Entity* ent;
-  Float speed;
-  Vec2f pos;
-} Camera;
-
-typedef struct Controller
-{
-  Bool state;
-} Controller;
-
-typedef struct Game
-{
-  Entity* ent;
-  Player* player;
-  Camera* camera;
-  Controller* control;
-} Game;
-
-
-extern SDL_Window* sdlwin;
-extern SDL_Renderer* sdlrender;
-extern Bool is_running;
-extern Bool input_keys[KEYS_LEN];
-extern Game* glob_game;
-
-extern Int render_init(None);
-extern Int render_close(None);
-
-extern Int game_init(None);
-extern Int game_logic(None);
-extern Int main(None);
-
-SDL_Window* sdlwin = null;
-SDL_Renderer* sdlrender = null;
-
-Game* glob_game = null;
-
-Bool is_running = false;
-Bool isFullScreen = false;
-
-/* Input manager's keys */
-Bool input_keys[KEYS_LEN] = { 0x0 };
+GameSystem* game_system = null;
 
 
 Int
-toggleFullScreen(SDL_Window* window)
+game_system_init(None)
 {
-  isFullScreen = !isFullScreen;
+  if (game_system != null)
+    {
+      fprintf(stderr, "warning, " STR(__func__) " called more then one time\n");
+      return error_already_done;
+    }
 
-  SDL_SetWindowFullscreen(window, !isFullScreen);
-  SDL_ShowCursor(isFullScreen);
+  if (glfwInit() == 0x0)
+    {
+      fprintf(stderr, "error, can't init glfw\n");
+      return error_lib;
+    }
 
-  return 0x0;
+  game_system = (GameSystem*) malloc(sizeof(GameSystem));
+  if (game_system == null)
+    {
+      fprintf(stderr, "error, can't allocate memory for system struct\n");
+      return error_out_of_mem;
+    }
+
+  game_system->window = glfwCreateWindow(640, 480, "Fun", NULL, NULL);
+  if (game_system->window == null)
+    {
+      fprintf(stderr, "error, can't create window\n");
+      glfwTerminate();
+      return error_system;
+    }
+
+  glfwMakeContextCurrent(game_system->window);
+  
+  return error_none;
 }
 
 Int
-drawObject(SDL_Renderer* render, Int* objMatr[3][2], Int coll)
+game_system_terminate(None)
 {
-  for(Int i = 0;i<coll-1;++i){
-    SDL_RenderDrawLine(render, objMatr[i][0], objMatr[i][1], objMatr[i+1][0], objMatr[i+1][1]);
-  }
-
-  return 0x0;
-}
-
-Int
-render_init(None)
-{
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0x0)
-    {
-      fprintf(stderr, "Error, can't start SDL:\n  %s\n", SDL_GetError());
-      return -0x1;
-    }
-  sdlwin = SDL_CreateWindow("Fun",
-                            SDL_WINDOWPOS_UNDEFINED,
-                            SDL_WINDOWPOS_UNDEFINED,
-                            0x800,
-                            0x800,
-                            SDL_WINDOW_FULLSCREEN);
-  if (sdlwin == NULL)
-    {
-      fprintf(stderr, "Error, can't create window:\n  %s\n", SDL_GetError());
-      SDL_Quit();
-      return -0x2;
-    }
-  
-  sdlrender = SDL_CreateRenderer(sdlwin, -0x1, SDL_RENDERER_ACCELERATED);
-
-  return 0x0;
-}
-
-Int
-render_close(None)
-{
-  SDL_DestroyRenderer(sdlrender);
-  SDL_DestroyWindow(sdlwin);
-  SDL_Quit();
-  return 0x0;
-}
-
-BigUint
-uid_new(None)
-{
-  static BigUint last_uid = 0x0;
-  return last_uid++;
-}
-
-Entity*
-entity_new(None)
-{
-  Entity* ent;
-
-  ent = (Entity*) malloc(sizeof(Entity));
-
-  if (ent == null)
-    {
-      fprintf(stderr, "Error, can't allocate new entity (base class)\n");
-      return null;
-    }
-
-  ent->uid = uid_new();
-
-  return ent;
-}
-
-Player*
-player_new(None)
-{
-  Player* plr;
-
-  plr = (Player*) malloc(sizeof(Player));
-
-  if (plr == null)
-    {
-      fprintf(stderr, "Error, can't allocate new player\n");
-      return null;
-    }
-
-  plr->ent = entity_new();
-  
-  return plr;
-}
-
-Camera*
-camera_new(None)
-{
-  Camera* cam;
-
-  cam = (Camera*) malloc(sizeof(Camera));
-
-  if (cam == null)
-    {
-      fprintf(stderr, "Error, can't allocate new camera\n");
-      return null;
-    }
-
-  cam->ent = entity_new();
-
-  return cam;
-}
-
-Game*
-game_new(None)
-{
-  Game* game;
-
-  game = (Game*) malloc(sizeof(Game));
-  
-  if (game == null)
-    {
-      fprintf(stderr, "Error, can't allocate `new` game (HOW?!)\n");
-      return null;
-    }
-
-  game->ent = entity_new();
-  
-  return game;
-}
-
-Controller*
-controller_new(None)
-{
-  Controller* control;
-
-  control = (Controller*) malloc(sizeof(Controller));
-
-  if (control == null)
-    {
-      fprintf(stderr, "Error, can't allocate new controller\n");
-      return null;
-    }
-
-  return control;
-}
-
-Int
-game_init(None)
-{
-  glob_game = game_new();
-  /* Player config */
-  glob_game->player = player_new();
-  glob_game->player->speed = 0x0.01p0;
-  /* Camera config */
-  glob_game->camera = camera_new();
-  glob_game->camera->speed = 0x0.08p0;
-  /* Controller config */
-  glob_game->control = controller_new();
-  glob_game->control->state = true;
-  
-  is_running = true;
-  toggleFullScreen(sdlwin);
-  return 0x0;
-}
-
-Int
-controller_process(None)
-{
-  Controller* cont;
-  Vec2f* cpos;
-  Float speed;
-
-  /* TODO: Add safe check */
-  cont = glob_game->control;
-  
-
-  cpos = cont->state?
-    &(glob_game->camera->pos):
-    &(glob_game->player->pos);
-
-  speed = cont->state?
-    glob_game->camera->speed:
-    glob_game->player->speed;
-
-  if (input_keys[KEY_F11])
-    toggleFullScreen(sdlwin);
-  if (input_keys[KEY_F])
-    cpos->x += speed;
-  if (input_keys[KEY_B])
-    cpos->x -= speed;
-  if (input_keys[KEY_N])
-    cpos->y += speed;
-  if (input_keys[KEY_P])
-    cpos->y -= speed;
-  if (input_keys[KEY_SEMICOLON] == 0x1)
-    {
-      cont->state = !cont->state;
-      input_keys[KEY_SEMICOLON] = 0x2;
-    }
-  if (input_keys[KEY_Q])
-    is_running = false;
-  
-  return 0x0;
-}
-
-Int
-render_game(None)
-{
-
-  /* TODO: Add more effective window size vars */
-  Int w, h;
-  SDL_GetWindowSize(sdlwin, &w, &h);
-
-  
-  /* Lines */
-  SDL_SetRenderDrawColor(sdlrender, 0xff, 0x00, 0x00, 0xff);
-  /* Horz */
-  SDL_RenderDrawLine(sdlrender,
-                     0x0, -glob_game->camera->pos.y,
-                     w, -glob_game->camera->pos.y);
-  /* Vert */
-  SDL_RenderDrawLine(sdlrender,
-                     -glob_game->camera->pos.x, 0x0,
-                     -glob_game->camera->pos.x, h);
-
-  
-  /* Draw player */
-  SDL_Rect plr_rect;
-  plr_rect = (SDL_Rect)
-    {
-      .x = glob_game->player->pos.x-glob_game->camera->pos.x,
-      .y = glob_game->player->pos.y-glob_game->camera->pos.y,
-      .w = 0x10,
-      .h = 0x10,
-    };
-  SDL_SetRenderDrawColor(sdlrender, 0x00, 0xff, 0x00, 0xff);
-  SDL_RenderDrawRect(sdlrender, &plr_rect);
-    
-  return 0x0;
-}
-
-Int
-game_logic(None)
-{
-  controller_process();
-
-  render_game();
-  
-  return 0x0;
+  glfwTerminate();
+  return error_none;
 }
 
 Int
 main(None)
 {
-  if (render_init() != 0x0)
+  game_system_init();
+
+  while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
     {
-      fprintf(stderr, "Error, can't init render\n");
-      return -0x1;
+      glClear(GL_COLOR_BUFFER_BIT);
+      glfwSwapBuffers(game_system->window);
+      glfwPollEvents();
     }
 
-  game_init();
-  while (is_running)
-    {
-      SDL_Event event;
-      while (SDL_PollEvent(&event))
-        {
-          switch (event.type)
-            {
-            case SDL_QUIT:
-              is_running = false;
-              break;
-            case SDL_KEYDOWN:
-              input_keys[event.key.keysym.scancode] =
-                input_keys[event.key.keysym.scancode]==0x0?
-                0x1:input_keys[event.key.keysym.scancode];
-              break;
-            case SDL_KEYUP:
-              input_keys[event.key.keysym.scancode] = 0x0;
-              break;
-            default:
-              break;
-            }
-        }
-      
-      SDL_SetRenderDrawColor(sdlrender, 0x00, 0x00, 0x00, 0xff);
-      SDL_RenderClear(sdlrender);
-
-      game_logic();
-        SDL_RenderDrawLine(sdlrender, 0,0,10,10);
-      //int a[3][2] = {{0,0}, {10,10}, {0,20}};
-      //drawObject(sdlrender, a, 3);
-      SDL_RenderPresent(sdlrender);
-    }
-
-  render_close();
-  return 0x0;
+  game_system_terminate();
+  
+  return error_none;
 }
+
