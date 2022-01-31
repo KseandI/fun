@@ -87,6 +87,17 @@ game_system_terminate(None)
   return error_none;
 }
 
+GLfloat verts[] =
+  {
+    -0.5f, -0.5f,  0.0f,
+    -0.5f,  0.5f,  0.0f,
+     0.5f, -0.5f,  0.0f,
+  };
+GLuint VBO;
+GLuint shader_vert;
+char shader_vert_code[0x400];
+FILE* shader_vert_fd = null;
+
 Int
 main(None)
 {
@@ -97,9 +108,32 @@ main(None)
 #endif /* DEBUG_MODE */
 
   glClearColor(0x00, 0xff, 0xff, 0xff);
+
+  /* VBO init */
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+  /* Vert shader */
+  shader_vert = glCreateShader(GL_VERTEX_SHADER);
+  shader_vert_fd = fopen("r", "./shader.vert"); /* TODO: Seperate shader pathes to defines */
+  if (shader_vert_fd == null)
+    {
+      fprintf(stderr, "error, can't open vertex shader\n");
+      game_system_terminate();
+      return -0x1;
+    }
+  fgets(shader_vert_code, sizeof(shader_vert_code), shader_vert_fd);
+  fclose(shader_vert_fd);
+  glShaderSource(shader_vert, 1, &shader_vert_code, null);
+  glCompileShader(shader_vert);
+  
   while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
     {
       glClear(GL_COLOR_BUFFER_BIT);
+
+      
       glfwSwapBuffers(game_system->window);
       glfwPollEvents();
     }
