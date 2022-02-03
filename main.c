@@ -107,17 +107,12 @@ game_system_terminate(None)
 #endif /* PRINT_WARNING_MESSAGES */
       return error_already_done;
     }
+  
   glfwDestroyWindow(game_system->window);
   glfwTerminate();
+  
   return error_none;
 }
-
-GLfloat verts[] =
-  {
-    -0.5f, -0.5f,  0.0f,
-    -0.5f,  0.5f,  0.0f,
-     0.5f, -0.5f,  0.0f,
-  };
 
 uint32_t
 get_file_size(FILE* file)
@@ -154,6 +149,7 @@ read_shader(GLenum type, const char* path)
 #ifdef PRINT_WARNING_MESSAGES
       fprintf(stderr, "warning, can't open vertex shader \"%s\"\n", path);
 #endif /* PRINT_WARNING_MESSAGES */
+      
     shader_fallback:
       source = "";
       shader_size = 0x0;
@@ -161,17 +157,22 @@ read_shader(GLenum type, const char* path)
   else
     {
       shader_size = get_file_size(fd);
+      
       source = (char*) malloc(sizeof(char)*shader_size);
       memset(source, 0x0, shader_size);
+      
       if (source == null)
         {
           fprintf(stderr, "error, can't allocate memory for shader\n");
           goto shader_fallback;
         }
+      
       /* It just works =| */
       while (fgets(source+strlen(source), shader_size, fd) != 0x0) {}
+      
       fclose(fd);
     }
+  
 #ifdef PRINT_SHADERS
   fprintf(stdout, "Shader(%u): \"%s\"\n", shader_size, source);
 #endif /* PRINT_SHADERS */
@@ -182,9 +183,9 @@ read_shader(GLenum type, const char* path)
   return shader;
 }
 
-GLuint VBO,
-  shader_vert,
-  shader_frag;
+GLuint shader_program,
+  shader_frag,
+  shader_vert;
 
 Int
 main(None)
@@ -204,14 +205,20 @@ main(None)
   /* set clear color */
   glClearColor(0x00, 0xff, 0xff, 0xff);
 
-  /* VBO init */
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
   /* Shaders */
   shader_vert = read_shader(GL_VERTEX_SHADER, "./shader.vert");
   shader_frag = read_shader(GL_FRAGMENT_SHADER, "./shader.frag");
+
+  /* Shader program */
+  shader_program = glCreateProgram();
+  
+  glAttachShader(shader_program, shader_vert);
+  glAttachShader(shader_program, shader_frag);
+  
+  glLinkProgram(shader_program);
+  
+  glDeleteShader(shader_vert);
+  glDeleteShader(shader_frag);
 
   /* main loop */
   while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
@@ -230,4 +237,11 @@ main(None)
   
   return error_none;
 }
+
+/* TODO list
+ * * add shader return code
+ * * seperate error log into macros
+ *
+ */
+
 
