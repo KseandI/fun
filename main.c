@@ -1,10 +1,18 @@
 
 #define DEBUG_MODE
+#define PRINT_GLFW_MESSAGES
+#define PRINT_WARNING_MESSAGES
+/*
+#define PRINT_SHADERS
+*/
 
-#include <GL/gl.h>
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "types.h"
 #include "error_codes.h"
@@ -32,8 +40,10 @@ debug_startup_info(None)
 None
 glfw_error_handle(Int code, const char* message)
 {
+#ifdef PRINT_GLFW_MESSAGES
   fprintf(stderr, "glfw error:\n  code: %d\n  message: %s\n",
           code, message);
+#endif /* PRINT_GLFW_MESSAGES */
   return;
 }
 
@@ -42,7 +52,9 @@ game_system_init(None)
 {
   if (game_system != null)
     {
+#ifdef PRINT_WARNING_MESSAGES
       fprintf(stderr, "warning, " STR(__func__) " called more then one time\n");
+#endif /* PRINT_WARNING_MESSAGES */
       return error_already_done;
     }
 
@@ -60,6 +72,10 @@ game_system_init(None)
       fprintf(stderr, "error, can't init glfw\n");
       return error_lib;
     }
+
+#ifdef DEBUG_MODE
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif /* DEBUG_MODE */
   
   game_system->window = glfwCreateWindow(640, 480, "Fun", null, null);
   if (game_system->window == null)
@@ -70,6 +86,13 @@ game_system_init(None)
     }
 
   glfwMakeContextCurrent(game_system->window);
+
+  glewExperimental = GL_TRUE;
+  if (glewInit() != GLEW_OK)
+    {
+      fprintf(stderr, "error, can't init glew\n");
+      return error_lib;
+    }
   
   return error_none;
 }
@@ -79,7 +102,9 @@ game_system_terminate(None)
 {
   if (game_system == null)
     {
+#ifdef PRINT_WARNING_MESSAGES
       fprintf(stderr, "warning, tried to terminate uninitalized system\n");
+#endif /* PRINT_WARNING_MESSAGES */
       return error_already_done;
     }
   glfwDestroyWindow(game_system->window);
@@ -93,51 +118,114 @@ GLfloat verts[] =
     -0.5f,  0.5f,  0.0f,
      0.5f, -0.5f,  0.0f,
   };
-GLuint VBO;
-GLuint shader_vert;
-char shader_vert_code[0x400];
-FILE* shader_vert_fd = null;
+
+uint32_t
+get_file_size(FILE* file)
+{
+  uint32_t current_pos;
+  uint32_t result;
+  if (file == null)
+    {
+#ifdef PRINT_WARNING_MESSAGES
+      fprintf(stderr, "tried to get size of null-file\n");
+#endif /* PRINT_WARNING_MESSAGES */
+      return error_data;
+    }
+  current_pos = ftell(file);
+  fseek(file, 0x0, SEEK_END);
+  result = ftell(file);
+  fseek(file, current_pos, SEEK_SET);
+  return result;
+}
+
+GLuint
+read_shader(GLenum type, const char* path)
+{
+  FILE* fd;
+  char* source;
+  uint32_t shader_size;
+  GLuint shader;
+
+  shader = glCreateShader(type);
+  fd = fopen(path, "r");
+  
+  if (fd == null)
+    {
+#ifdef PRINT_WARNING_MESSAGES
+      fprintf(stderr, "warning, can't open vertex shader \"%s\"\n", path);
+#endif /* PRINT_WARNING_MESSAGES */
+    shader_fallback:
+      source = "";
+      shader_size = 0x0;
+    }
+  else
+    {
+      shader_size = get_file_size(fd);
+      source = (char*) malloc(sizeof(char)*shader_size);
+      memset(source, 0x0, shader_size);
+      if (source == null)
+        {
+          fprintf(stderr, "error, can't allocate memory for shader\n");
+          goto shader_fallback;
+        }
+      /* It just works =| */
+      while (fgets(source+strlen(source), shader_size, fd) != 0x0) {}
+      fclose(fd);
+    }
+#ifdef PRINT_SHADERS
+  fprintf(stdout, "Shader(%u): \"%s\"\n", shader_size, source);
+#endif /* PRINT_SHADERS */
+  
+  glShaderSource(shader, 1, (const char**) &source, null);
+  glCompileShader(shader);
+
+  return shader;
+}
+
+GLuint VBO,
+  shader_vert,
+  shader_frag;
 
 Int
 main(None)
 {
-  game_system_init();
+  /* init render system */
+  if (game_system_init() < error_none)
+    {
+      fprintf(stderr, " => error, can't init game system\n");
+      return error_upper;
+    }
 
+  /* print debug info */
 #ifdef DEBUG_MODE
   debug_startup_info();
 #endif /* DEBUG_MODE */
 
+  /* set clear color */
   glClearColor(0x00, 0xff, 0xff, 0xff);
 
   /* VBO init */
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  
   glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
-  /* Vert shader */
-  shader_vert = glCreateShader(GL_VERTEX_SHADER);
-  shader_vert_fd = fopen("r", "./shader.vert"); /* TODO: Seperate shader pathes to defines */
-  if (shader_vert_fd == null)
-    {
-      fprintf(stderr, "error, can't open vertex shader\n");
-      game_system_terminate();
-      return -0x1;
-    }
-  fgets(shader_vert_code, sizeof(shader_vert_code), shader_vert_fd);
-  fclose(shader_vert_fd);
-  glShaderSource(shader_vert, 1, &shader_vert_code, null);
-  glCompileShader(shader_vert);
-  
+  /* Shaders */
+  shader_vert = read_shader(GL_VERTEX_SHADER, "./shader.vert");
+  shader_frag = read_shader(GL_FRAGMENT_SHADER, "./shader.frag");
+
+  /* main loop */
   while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
     {
+      /* clear background */
       glClear(GL_COLOR_BUFFER_BIT);
 
-      
+      /* print changes */
       glfwSwapBuffers(game_system->window);
+      /* get all events from system */
       glfwPollEvents();
     }
 
+  /* terminate all render systems */
   game_system_terminate();
   
   return error_none;
