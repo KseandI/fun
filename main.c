@@ -23,7 +23,14 @@ typedef struct GameSystem
   GLFWwindow* window;
 } GameSystem;
 
+typedef struct GameOptions
+{
+  Bool dev_mode;
+  Bool wireframe_mode;
+} GameOptions;
+
 GameSystem* game_system = null;
+GameOptions* game_options = null;
 
 None
 debug_startup_info(None)
@@ -69,9 +76,7 @@ game_system_init(None)
       return error_lib;
     }
 
-#ifdef DEBUG_MODE
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif /* DEBUG_MODE */
+  ON_DEBUG(glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE));
   
   game_system->window = glfwCreateWindow(640, 480, "Fun", null, null);
   if (game_system->window == null)
@@ -104,7 +109,35 @@ game_system_terminate(None)
   
   glfwDestroyWindow(game_system->window);
   glfwTerminate();
+
+  free(game_system);
   
+  return error_none;
+}
+
+Int
+game_options_init(None)
+{
+  game_options = new(GameOptions);
+  if (game_options == null)
+    {
+      PRT_ERROR("error, can't allocate memory for options (rly?)\n");
+      return error_out_of_mem;
+    }
+  memset(game_options, 0x0, sizeof(GameOptions));
+
+  return error_none;
+}
+
+Int
+game_options_terminate(None)
+{
+  if (game_options == null)
+    {
+      PRT_WARN("warning, tried to terminate uninitalized options\n");
+      return error_already_done;
+    }
+  free(game_options);
   return error_none;
 }
 
@@ -230,7 +263,7 @@ main(None)
   GLuint shader_program,
     shader_frag,
     shader_vert;
-  uint32_t vao, vbo;
+  uint32_t vao, vbo, ebo;
   
   /* init render system */
   if (game_system_init() < error_none)
@@ -239,9 +272,13 @@ main(None)
       return error_upper;
     }
 
-#ifdef DEBUG_MODE
-  debug_startup_info();         /* print debug info */
-#endif /* DEBUG_MODE */
+  if (game_options_init() < error_none)
+    {
+      PRT_ERROR(" => error, can't init game options\n");
+      return error_upper;
+    }
+
+  ON_DEBUG(debug_startup_info()); /* print debug info */
 
   glClearColor(0x00, 0xff, 0xff, 0xff); /* set clear color */
 
@@ -253,13 +290,17 @@ main(None)
 
   SFloat vert_pos[] =
     {
-      -1.0f,  0.0f,  0.0f,
-       1.0f,  0.0f,  0.0f,
-       1.0f, -1.0f,  0.0f,
+      -1.0f,  0.0f,  0.0f, /* UL */
+      +1.0f,  0.0f,  0.0f, /* UR */
+      +1.0f, -1.0f,  0.0f, /* DR */
        
-       1.0f, -1.0f,  0.0f,
-      -1.0f, -1.0f,  0.0f,
-      -1.0f,  0.0f,  0.0f,
+      -1.0f, -1.0f,  0.0f, /* DL */
+    };
+
+  uint32_t indices[] =
+    {
+      0x0, 0x1, 0x2,
+      0x2, 0x3, 0x0
     };
   
   /* arrays */
@@ -270,22 +311,36 @@ main(None)
   glBufferData(GL_ARRAY_BUFFER, sizeof(vert_pos), vert_pos, GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
   glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(SFloat), null); /* create information about buffer */
   glEnableVertexAttribArray(0); /* activate buffer */
+
+  glGenBuffers(1, &ebo);        /* generate ebo */
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); /* bind vao element array to ebo */
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); /* copy indices to ebo */
   
+  
+  game_options->wireframe_mode = 0x1;
 
   /* main loop */
   while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
     {
       glClear(GL_COLOR_BUFFER_BIT); /* clear background */
 
-      /* Main code */
+      /* main code */
       glUseProgram(shader_program);
       glBindVertexArray(vao);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
+      
+      /* control wireframe mode */
+      if (game_options->wireframe_mode != 0x0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      else
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      
+      glDrawElements(GL_TRIANGLES, 0x6, GL_UNSIGNED_INT, 0x0);
       
       glfwSwapBuffers(game_system->window); /* Print changes */
       glfwPollEvents();         /* Get all events from system */
     }
 
+  game_options_terminate();     /* terminate allocated options for game */
   game_system_terminate();      /* terminate all render systems */
   
   return error_none;

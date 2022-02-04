@@ -6,6 +6,9 @@
 #define _STR(X) #X
 #define STR(X) _STR(X)
 
+/* allocate struct */
+#define new(tp) (tp*) malloc(sizeof(tp))
+
 /* terminal messages */
 #define PRT_ERROR(...) \
   fprintf(stderr, ##__VA_ARGS__)
@@ -22,6 +25,14 @@
   fprintf(stderr, ##__VA_ARGS__)
 #else
 #define PRT_DEBUG(...)
+#endif
+
+
+/* debug modules */
+#ifdef DEBUG_MODE
+#define ON_DEBUG(com) com
+#else
+#define ON_DEBUG(_)
 #endif
 
 #endif /* PREPROC_TOOLS_INC */
