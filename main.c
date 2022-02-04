@@ -317,7 +317,7 @@ main(None)
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); /* copy indices to ebo */
   
   
-  game_options->wireframe_mode = 0x1;
+  game_options->wireframe_mode = 0x1; /* enable wireframe mode */
 
   /* main loop */
   while (glfwWindowShouldClose(game_system->window) != GLFW_TRUE)
@@ -330,9 +330,9 @@ main(None)
       
       /* control wireframe mode */
       if (game_options->wireframe_mode != 0x0)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); /* don't fill polygons */
       else
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); /* fill polygons */
       
       glDrawElements(GL_TRIANGLES, 0x6, GL_UNSIGNED_INT, 0x0);
       
