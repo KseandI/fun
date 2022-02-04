@@ -16,7 +16,9 @@ typedef int32_t Int;
 typedef uint32_t UInt;
 
 typedef double Float;
+typedef float SFloat;
 
+typedef char Char;
 
 
 #endif /* GAME_TYPES_INC */

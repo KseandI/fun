@@ -128,6 +128,8 @@ get_file_size(FILE* file)
 GLuint
 read_shader(GLenum type, const char* path)
 {
+  Int error_code;
+  Char error_message[0x200];
   FILE* fd;
   char* source;
   uint32_t shader_size;
@@ -170,12 +172,22 @@ read_shader(GLenum type, const char* path)
   glShaderSource(shader, 1, (const char**) &source, null);
   glCompileShader(shader);
 
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &error_code);
+  if (error_code == 0x0)
+    {
+      PRT_ERROR("error, can't compile shader %s\n"
+                "log: %s\n", path, error_message);
+      return 0x0;
+    }
+
   return shader;
 }
 
 GLuint
 shader_program_new(GLuint vert, GLuint frag)
 {
+  Int error_code;
+  Char error_message[0x200];
   GLuint prog;
   
   prog = glCreateProgram();
@@ -184,6 +196,16 @@ shader_program_new(GLuint vert, GLuint frag)
   glAttachShader(prog, frag);
 
   glLinkProgram(prog);
+
+  glGetProgramiv(prog, GL_LINK_STATUS, &error_code);
+  if (error_code == 0x0)
+    {
+      glGetProgramInfoLog(prog, 0x200, null, error_message);
+      PRT_ERROR("error, can't link shaders to program\n"
+                "log: %s\n", error_message);
+      return 0x0;
+    }
+      
 
   return prog;
 }
@@ -229,11 +251,15 @@ main(None)
 
   shader_program = shader_program_new_unique(shader_vert, shader_frag); /* shader program */
 
-  Float vert_pos[] =
+  SFloat vert_pos[] =
     {
-      -0.5f, -0.5f, 0.0f,
-       0.5f, -0.5f, 0.0f,
-       0.0f,  0.5f, 0.0f
+      -1.0f,  0.0f,  0.0f,
+       1.0f,  0.0f,  0.0f,
+       1.0f, -1.0f,  0.0f,
+       
+       1.0f, -1.0f,  0.0f,
+      -1.0f, -1.0f,  0.0f,
+      -1.0f,  0.0f,  0.0f,
     };
   
   /* arrays */
@@ -242,7 +268,7 @@ main(None)
   glGenBuffers(1, &vbo);        /* generate one vbo */
   glBindBuffer(GL_ARRAY_BUFFER, vbo); /* bind current buffer to this buffer */
   glBufferData(GL_ARRAY_BUFFER, sizeof(vert_pos), vert_pos, GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
-  glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(Float), null); /* create information about buffer */
+  glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(SFloat), null); /* create information about buffer */
   glEnableVertexAttribArray(0); /* activate buffer */
   
 
@@ -254,7 +280,7 @@ main(None)
       /* Main code */
       glUseProgram(shader_program);
       glBindVertexArray(vao);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
       
       glfwSwapBuffers(game_system->window); /* Print changes */
       glfwPollEvents();         /* Get all events from system */
