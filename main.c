@@ -346,10 +346,4 @@ main(None)
   return error_none;
 }
 
-/* TODO list
- * * add shader compilation error checking
- * * add program compilation error checking
- *
- */
-
 
