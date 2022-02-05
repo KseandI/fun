@@ -94,6 +94,8 @@ game_system_init(None)
       PRT_ERROR("error, can't init glew\n");
       return error_lib;
     }
+
+  glViewport(0, 0, 640, 480);
   
   return error_none;
 }
@@ -288,7 +290,7 @@ main(None)
 
   shader_program = shader_program_new_unique(shader_vert, shader_frag); /* shader program */
 
-  SFloat vert_pos[] =
+  GLfloat vert_pos[] =
     {
       -1.0f,  0.0f,  0.0f, /* UL */
       +1.0f,  0.0f,  0.0f, /* UR */
@@ -297,7 +299,7 @@ main(None)
       -1.0f, -1.0f,  0.0f, /* DL */
     };
 
-  uint32_t indices[] =
+  GLuint indices[] =
     {
       0x0, 0x1, 0x2,
       0x2, 0x3, 0x0
@@ -309,7 +311,7 @@ main(None)
   glGenBuffers(1, &vbo);        /* generate one vbo */
   glBindBuffer(GL_ARRAY_BUFFER, vbo); /* bind current buffer to this buffer */
   glBufferData(GL_ARRAY_BUFFER, sizeof(vert_pos), vert_pos, GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
-  glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(SFloat), null); /* create information about buffer */
+  glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(GLfloat), null); /* create information about buffer */
   glEnableVertexAttribArray(0); /* activate buffer */
 
   glGenBuffers(1, &ebo);        /* generate ebo */
