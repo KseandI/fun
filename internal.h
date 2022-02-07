@@ -72,6 +72,10 @@ UInt get_file_size(FILE* file);
 GLuint read_shader(GLenum type, const char* path);
 GLuint shader_program_new(GLuint vert, GLuint frag);
 GLuint shader_program_new_unique(GLuint vert, GLuint frag);
+GLuint vao_create(None);
+None vao_bind(GLuint vao);
+GLuint vbo_create(None);
+None vbo_bind(GLuint vbo);
 Int main(None);
 
 #endif /* INTERNAL_INC */

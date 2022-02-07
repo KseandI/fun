@@ -293,6 +293,36 @@ shader_program_new(GLuint vert, GLuint frag)
 }
 
 GLuint
+vao_create(None)
+{
+  GLuint vao;
+  glGenVertexArrays(1, &vao);   /* generate vao on gpu */
+  return vao;
+}
+
+None
+vao_bind(GLuint vao)
+{
+  glBindVertexArray(vao);       /* select vao */
+  return;
+}
+
+GLuint
+vbo_create(None)
+{
+  GLuint vbo;
+  glGenBuffers(1, &vbo);        /* generate vbo on gpu */
+  return vbo;
+}
+
+None
+vbo_bind(GLuint vbo)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, vbo); /* select vbo as array buffer */
+  return;
+}
+
+GLuint
 shader_program_new_unique(GLuint vert, GLuint frag)
 {
   GLuint prog;
@@ -361,10 +391,10 @@ main(None)
     };
   
   /* arrays */
-  glGenVertexArrays(1, &vao);   /* generate vao on card */
-  glBindVertexArray(vao);       /* bind current vao to created */
-  glGenBuffers(1, &vbo);        /* generate one vbo */
-  glBindBuffer(GL_ARRAY_BUFFER, vbo); /* bind current buffer to this buffer */
+  vao = vao_create();
+  vao_bind(vao);
+  vbo = vbo_create();
+  vbo_bind(vbo);
   glBufferData(GL_ARRAY_BUFFER,
                sizeof(vert_pos),
                vert_pos,
