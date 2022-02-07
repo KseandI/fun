@@ -42,14 +42,31 @@ debug_startup_info(None)
   return;
 }
 
-None
-glfw_error_handle(Int code, const char* message)
+void
+glfw_error_handle(int code, const char* message)
 {
 #ifdef PRINT_GLFW_MESSAGES
   PRT_ERROR("glfw error:\n  code: %d\n  message: %s\n",
           code, message);
 #endif /* PRINT_GLFW_MESSAGES */
   return;
+}
+
+void
+glfw_key_handle(GLFWwindow* win, Int key, Int scancode, Int action, Int mods)
+{
+  if (game_system == null || game_options == null)      /* if game not inited */
+    return ;
+  if (win != game_system->window) /* if inputed on another window */
+    return ;
+
+  if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+      game_options->wireframe_mode = !(game_options->wireframe_mode);
+      return ;
+    }
+  
+  return ;
 }
 
 Int
@@ -87,6 +104,7 @@ game_system_init(None)
     }
 
   glfwMakeContextCurrent(game_system->window);
+  glfwSetKeyCallback(game_system->window, glfw_key_handle);
 
   glewExperimental = GL_TRUE;
   if (glewInit() != GLEW_OK)
@@ -250,7 +268,11 @@ shader_program_new_unique(GLuint vert, GLuint frag)
 {
   GLuint prog;
   
-  prog = shader_program_new(vert, frag);
+  if ((prog = shader_program_new(vert, frag)) == 0x0)
+    {
+      PRT_ERROR(" => error, can't create shader program\n");
+      return 0x0;
+    }
   
   glDeleteShader(vert);
   glDeleteShader(frag);
@@ -289,6 +311,11 @@ main(None)
   shader_frag = read_shader(GL_FRAGMENT_SHADER, "./shader.frag");
 
   shader_program = shader_program_new_unique(shader_vert, shader_frag); /* shader program */
+  if (shader_program == 0x0)
+    {
+      PRT_ERROR(" => error, can't use shaders\n");
+    }
+      
 
   GLfloat vert_pos[] =
     {
