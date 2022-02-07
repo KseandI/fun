@@ -1,10 +1,5 @@
 
-#define DEBUG_MODE
-#define PRINT_GLFW_MESSAGES
-#define PRINT_WARNING_MESSAGES
-/*
-#define PRINT_SHADERS
-*/
+#include "internal.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -17,21 +12,6 @@
 #include "types.h"
 #include "preproc_tools.h"
 #include "error_codes.h"
-
-typedef struct GameSystem
-{
-  GLFWwindow* window;
-} GameSystem;
-
-typedef struct GameOptions
-{
-  Bool is_game_running;
-  Bool dev_mode;
-  Bool wireframe_mode;
-} GameOptions;
-
-GameSystem* game_system = null;
-GameOptions* game_options = null;
 
 None
 debug_startup_info(None)
@@ -90,7 +70,7 @@ glfw_error_handle(int code, const char* message)
 }
 
 void
-glfw_key_handle(GLFWwindow* win, Int key, Int scancode, Int action, Int mods)
+glfw_key_handle(GLFWwindow* win, int key, int scancode, int action, int mods)
 {
   if (game_system == null || game_options == null)      /* if game not inited */
     return ;
@@ -140,7 +120,8 @@ game_system_init(None)
       return error_lib;
     }
 
-  ON_DEBUG(glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE)); /* enable opengl debug context (IDK what it is) */
+  ON_DEBUG(glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,
+                          GL_TRUE)); /* enable opengl debug context (IDK what it is) */
   
   game_system->window = glfwCreateWindow(640, 480, "Fun", null, null); /* create window */
   if (game_system->window == null)
@@ -208,11 +189,11 @@ game_options_terminate(None)
   return error_none;
 }
 
-uint32_t
+UInt
 get_file_size(FILE* file)
 {
-  uint32_t current_pos;
-  uint32_t result;
+  UInt current_pos;
+  UInt result;
   if (file == null)             /* if file doesn't exists */
     {
       PRT_DEBUG("tried to get size of null-file\n");
@@ -232,7 +213,7 @@ read_shader(GLenum type, const char* path)
   Char error_message[0x200];    /* compilation error message */
   FILE* fd;                     /* file descriptor (system's file abstraction) */
   char* source;                 /* shader's code */
-  uint32_t shader_size;         /* size of shader */
+  UInt shader_size;             /* size of shader */
   GLuint shader;                /* pointer to the shader */
 
   shader = glCreateShader(type); /* create new shader */
@@ -384,13 +365,24 @@ main(None)
   glBindVertexArray(vao);       /* bind current vao to created */
   glGenBuffers(1, &vbo);        /* generate one vbo */
   glBindBuffer(GL_ARRAY_BUFFER, vbo); /* bind current buffer to this buffer */
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vert_pos), vert_pos, GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
-  glVertexAttribPointer(0x0, 0x3, GL_FLOAT, GL_FALSE, 0x3 * sizeof(GLfloat), null); /* create information about buffer */
+  glBufferData(GL_ARRAY_BUFFER,
+               sizeof(vert_pos),
+               vert_pos,
+               GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
+  glVertexAttribPointer(0x0,
+                        0x3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        0x3 * sizeof(GLfloat),
+                        null); /* create information about buffer */
   glEnableVertexAttribArray(0); /* activate buffer */
 
   glGenBuffers(1, &ebo);        /* generate ebo */
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); /* bind vao element array to ebo */
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); /* copy indices to ebo */
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               sizeof(indices),
+               indices,
+               GL_STATIC_DRAW); /* copy indices to ebo */
   
   
   game_options->wireframe_mode = 0x1; /* enable wireframe mode */
@@ -401,7 +393,8 @@ main(None)
   /* main loop */
   while (game_options->is_game_running)
     {
-      game_options->is_game_running &= /* simple, if not is_run == true and (should_close == false) then exit */
+      game_options->is_game_running &= /* simple, if not is_run == true
+                                          and (should_close == false) then exit */
         glfwWindowShouldClose(game_system->window) == GLFW_FALSE;
       
       glClear(GL_COLOR_BUFFER_BIT); /* clear background */
