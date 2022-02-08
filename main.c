@@ -292,40 +292,63 @@ shader_program_new(GLuint vert, GLuint frag)
   return prog;
 }
 
-GLuint
+Vao*
 vao_create(None)
 {
-  GLuint vao;
-  glGenVertexArrays(1, &vao);   /* generate vao on gpu */
+  Vao* vao;
+  vao = new(Vao);
+  if (vao == null)
+    {
+      PRT_ERROR("error, can't allocate memory for vao\n");
+      return null;
+    }
+  glGenVertexArrays(1, &(vao->ptr)); /* generate vao on gpu */
   return vao;
 }
 
-None
-vao_bind(GLuint vao)
+Int
+vao_bind(Vao* vao)
 {
-  glBindVertexArray(vao);       /* select vao */
-  return;
+  glBindVertexArray(vao->ptr);  /* select vao */
+  return error_none;
 }
 
-GLuint
+Vbo*
 vbo_create(None)
 {
-  GLuint vbo;
-  glGenBuffers(1, &vbo);        /* generate vbo on gpu */
+  Vbo* vbo;
+  vbo = new(Vbo);
+  if (vbo == null)
+    {
+      PTR_ERROR("error, can't allocate memory for vbo\n");
+      return null;
+    }
+  glGenBuffers(1, &(vbo->ptr)); /* generate vbo on gpu */
   return vbo;
 }
 
-None
-vbo_bind(GLuint vbo)
+Int
+vbo_bind(Vbo* vbo)
 {
-  glBindBuffer(GL_ARRAY_BUFFER, vbo); /* select vbo as array buffer */
+  if (vbo == null)
+    {
+      PTR_ERROR("error, trying to bind nonexistent vbo\n");
+      return error_null;
+    }
+  glBindBuffer(GL_ARRAY_BUFFER, vbo->ptr); /* select vbo as array buffer */
   return;
 }
 
-None
-vbo_load_data(GLuint vbo, Ptr data, UInt size, GLenum type)
+Int
+vbo_load_data(Vbo* vbo, Ptr data, UInt size, GLenum type)
 {
+  if (vbo == null)
+    {
+      PTR_ERROR("error, can't load data into nonexistent vbo\n");
+      return error_null;
+    }
   glBufferData(GL_ARRAY_BUFFER, size, data, type);
+  vbo->size = size;
   return;
 }
 
@@ -353,7 +376,9 @@ main(None)
   GLuint shader_program,
     shader_frag,
     shader_vert;
-  uint32_t vao, vbo, ebo;
+  Vao vao;
+  Vbo vbo;
+  uint32_t ebo;
   
   if (game_system_init() < error_none) /* init system */
     {
@@ -434,7 +459,7 @@ main(None)
 
       /* main code */
       glUseProgram(shader_program); /* use shader program */
-      glBindVertexArray(vao);       /* bind vao */
+      vao_bind(vao);
       
       glDrawElements(GL_TRIANGLES, 0x6, GL_UNSIGNED_INT, 0x0);
       

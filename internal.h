@@ -40,6 +40,17 @@ typedef struct Vec2
   Float x, y;
 } Vec2;
 
+typedef struct Vao
+{
+  GLuint ptr;
+} Vao;
+
+typedef struct Vbo
+{
+  GLuint ptr;
+  UInt size;
+} Vbo;
+
 typedef struct GameSystem
 {
   GLFWwindow* window;
@@ -83,11 +94,11 @@ UInt get_file_size(FILE* file);
 GLuint read_shader(GLenum type, const char* path);
 GLuint shader_program_new(GLuint vert, GLuint frag);
 GLuint shader_program_new_unique(GLuint vert, GLuint frag);
-GLuint vao_create(None);
-None vao_bind(GLuint vao);
-GLuint vbo_create(None);
-None vbo_bind(GLuint vbo);
-None vbo_load_data(GLuint vbo, Ptr data, UInt size, GLenum type);
+Vao* vao_create(None);
+Int vao_bind(Vao* vao);
+Vbo* vbo_create(None);
+Int vbo_bind(Vbo* vbo);
+Int vbo_load_data(Vbo* vbo, Ptr data, UInt size, GLenum type);
 Int main(None);
 
 #endif /* INTERNAL_INC */
