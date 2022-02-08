@@ -35,6 +35,11 @@
  * types
  */
 
+typedef struct Vec2
+{
+  Float x, y;
+} Vec2;
+
 typedef struct GameSystem
 {
   GLFWwindow* window;
@@ -46,6 +51,12 @@ typedef struct GameOptions
   Bool dev_mode;
   Bool wireframe_mode;
 } GameOptions;
+
+typedef struct RenderObject
+{
+  Vec2 transform;
+  GLuint vao;
+} RenderObject;
 
 /*
  * variables
@@ -76,6 +87,7 @@ GLuint vao_create(None);
 None vao_bind(GLuint vao);
 GLuint vbo_create(None);
 None vbo_bind(GLuint vbo);
+None vbo_load_data(GLuint vbo, Ptr data, UInt size, GLenum type);
 Int main(None);
 
 #endif /* INTERNAL_INC */

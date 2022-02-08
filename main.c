@@ -322,6 +322,13 @@ vbo_bind(GLuint vbo)
   return;
 }
 
+None
+vbo_load_data(GLuint vbo, Ptr data, UInt size, GLenum type)
+{
+  glBufferData(GL_ARRAY_BUFFER, size, data, type);
+  return;
+}
+
 GLuint
 shader_program_new_unique(GLuint vert, GLuint frag)
 {
@@ -375,7 +382,7 @@ main(None)
     }
       
 
-  GLfloat vert_pos[] =
+  GLfloat verts[] =
     {
       -1.0f,  0.0f,  0.0f, /* UL */
       +1.0f,  0.0f,  0.0f, /* UR */
@@ -395,10 +402,7 @@ main(None)
   vao_bind(vao);
   vbo = vbo_create();
   vbo_bind(vbo);
-  glBufferData(GL_ARRAY_BUFFER,
-               sizeof(vert_pos),
-               vert_pos,
-               GL_STATIC_DRAW); /* copy data from vert_pos to static memory on card */
+  vbo_load_data(vbo, verts, sizeof(verts), GL_STATIC_DRAW);
   glVertexAttribPointer(0x0,
                         0x3,
                         GL_FLOAT,
@@ -412,8 +416,7 @@ main(None)
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                sizeof(indices),
                indices,
-               GL_STATIC_DRAW); /* copy indices to ebo */
-  
+               GL_STATIC_DRAW); /* copy indices to ebo */  
   
   game_options->wireframe_mode = 0x1; /* enable wireframe mode */
   game_options->is_game_running = 0x1; /* start game */
