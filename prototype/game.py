@@ -4,17 +4,27 @@ from pygame.locals import *
 
 from entity import Entity
 from player import Player
+from camera import Camera
 import gmath
 
 class GameSystem:            
     def __init__(self):
         pygame.init()
-        self.surface = pygame.display.set_mode((640, 360))
+        self.window_size = gmath.Vector2(640, 360)
+        self.surface = pygame.display.set_mode((self.window_size.x, self.window_size.y))
         self.kpressed = list()
         self.is_running = True
         self.rend_ents = list()
         self.player = Player()
+        self.camera = Camera(self.surface, self.window_size)
         self.init()
+
+
+    def init(self):
+        pygame.display.set_caption("fun")
+        self.rend_ents.append(self.player)
+        self.rend_ents.append(Entity())
+        self.player.speed = float.fromhex('0x1')
 
         
     def loop(self):
@@ -22,9 +32,14 @@ class GameSystem:
             self.event_check()
             if self.is_running == False:
                 break
-
+            
             self.player.rel_move_vec(gmath.Vector2(self.kpressed[K_f]-self.kpressed[K_b],
-                                                   self.kpressed[K_n]-self.kpressed[K_p]))
+                                                   self.kpressed[K_n]-self.kpressed[K_p])
+                                     * self.player.speed)
+            
+            self.camera.move_vec(self.player.position-self.camera.size/2+self.player.size/2)
+            print(self.player.position)
+            print(self.camera.position)
             
             self.render()
     
@@ -34,23 +49,21 @@ class GameSystem:
             if event.type == QUIT:
                 pygame.quit()
                 self.is_running = False
+                return
         self.kpressed = pygame.key.get_pressed()
         if self.kpressed[K_q]:
             self.is_running = False
+            return
+        return
                     
 
     def render(self):
         self.surface.fill((0, 255, 255))
 
         for ent in self.rend_ents:
-            self.surface.blit(ent.surf, ent.rect)
+            self.camera.render_entity(ent)
 
         pygame.display.update()
-
-
-    def init(self):
-        pygame.display.set_caption("fun")
-        self.rend_ents.append(self.player)
 
         
 

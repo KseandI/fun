@@ -40,4 +40,7 @@ class Entity(pygame.sprite.Sprite):
 
     def get_status(self):
         return (self.position, self.size)
+
+    def __str__(self):
+        return f"<entity: {self.position.x}; {self.position.y}>"
     
