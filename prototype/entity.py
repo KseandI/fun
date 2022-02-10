@@ -34,5 +34,5 @@ class Entity(pygame.sprite.Sprite):
         return self.size
 
     def get_status(self):
-        pass # TODO: I ended here
+        return (self.position, self.size)
     

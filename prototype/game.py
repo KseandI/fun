@@ -34,6 +34,8 @@ class GameSystem:
             if event.type == QUIT:
                 pygame.quit()
                 self.is_running = False
+        if pygame.key.get_pressed()[K_q]:
+            self.is_running = False
                     
 
     def render(self):
