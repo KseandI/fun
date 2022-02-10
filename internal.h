@@ -43,13 +43,9 @@ typedef struct Vec2
 typedef struct Vao
 {
   GLuint ptr;
+  UInt len;
+  GLuint vbos[0x10];
 } Vao;
-
-typedef struct Vbo
-{
-  GLuint ptr;
-  UInt size;
-} Vbo;
 
 typedef struct GameSystem
 {
@@ -96,9 +92,6 @@ GLuint shader_program_new(GLuint vert, GLuint frag);
 GLuint shader_program_new_unique(GLuint vert, GLuint frag);
 Vao* vao_create(None);
 Int vao_bind(Vao* vao);
-Vbo* vbo_create(None);
-Int vbo_bind(Vbo* vbo);
-Int vbo_load_data(Vbo* vbo, Ptr data, UInt size, GLenum type);
 Int main(None);
 
 #endif /* INTERNAL_INC */

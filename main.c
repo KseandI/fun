@@ -28,7 +28,7 @@ game_reload_wireframe_mode(None)
 {
   if (game_options == null || game_system == null) /* if not inited game */
     return ;
-    
+
   if (game_options->wireframe_mode != 0x0)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); /* don't fill polygons */
   else
@@ -51,11 +51,11 @@ game_toggle_wireframe_mode(None)
     return ;
   if (game_system == null)      /* if glew not inited */
     return ;
-  
+
   game_options->wireframe_mode = !(game_options->wireframe_mode); /* toggle options */
 
   game_reload_wireframe_mode();
-  
+
   return ;
 }
 
@@ -92,7 +92,7 @@ glfw_key_handle(GLFWwindow* win, int key, int scancode, int action, int mods)
         }
       return;
     }
-  
+
   return ;
 }
 
@@ -113,7 +113,7 @@ game_system_init(None)
     }
 
   glfwSetErrorCallback(glfw_error_handle); /* set function/callback for glfw error handle */
-  
+
   if (glfwInit() == 0x0)        /* init */
     {
       PRT_ERROR("error, can't init glfw\n");
@@ -122,7 +122,7 @@ game_system_init(None)
 
   ON_DEBUG(glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,
                           GL_TRUE)); /* enable opengl debug context (IDK what it is) */
-  
+
   game_system->window = glfwCreateWindow(640, 480, "Fun", null, null); /* create window */
   if (game_system->window == null)
     {
@@ -142,7 +142,7 @@ game_system_init(None)
     }
 
   glViewport(0, 0, 640, 480);   /* pass window size to opengl */
-  
+
   return error_none;
 }
 
@@ -154,12 +154,12 @@ game_system_terminate(None)
       PRT_WARN("warning, tried to terminate uninitalized system\n");
       return error_already_done;
     }
-  
+
   glfwDestroyWindow(game_system->window); /* terminate main window */
   glfwTerminate();                        /* terminate glfw render */
 
   free(game_system);            /* de-allocate system struct */
-  
+
   return error_none;
 }
 
@@ -218,11 +218,11 @@ read_shader(GLenum type, const char* path)
 
   shader = glCreateShader(type); /* create new shader */
   fd = fopen(path, "r");         /* open source file */
-  
+
   if (fd == null)               /* if file doesn't exists */
     {
       PRT_WARN("warning, can't open vertex shader \"%s\"\n", path);
-      
+
     shader_fallback:            /* use empty shader */
       source = "#version 330 core\n";
       shader_size = 0x0;
@@ -230,26 +230,26 @@ read_shader(GLenum type, const char* path)
   else
     {
       shader_size = get_file_size(fd); /* get shader size */
-      
+
       source = (char*) malloc(sizeof(char)*shader_size); /* allocate memory for shader source */
-      
+
       if (source == null)       /* if can't allocate memory */
         {
           PRT_ERROR("error, can't allocate memory for shader\n");
           goto shader_fallback;
         }
       memset(source, 0x0, shader_size);                  /* clear this memory */
-      
+
       /* It just works =| */
       while (fgets(source+strlen(source), shader_size, fd) != 0x0) {} /* read shader to the string */
-      
+
       fclose(fd);               /* close file */
     }
-  
+
 #ifdef PRINT_SHADERS
   PRT_DEBUG("Shader(%u): \"%s\"\n", shader_size, source); /* print shader source if required */
 #endif /* PRINT_SHADERS */
-  
+
   glShaderSource(shader, 1, (const char**) &source, null); /* copy shader's source to the gpu */
   glCompileShader(shader);                                 /* compile shader */
 
@@ -271,7 +271,7 @@ shader_program_new(GLuint vert, GLuint frag)
   Int error_code;
   Char error_message[0x200];
   GLuint prog;
-  
+
   prog = glCreateProgram();     /* create opengl program */
 
   glAttachShader(prog, vert);   /* attach two shaders */
@@ -287,7 +287,7 @@ shader_program_new(GLuint vert, GLuint frag)
                 "log: %s\n", error_message);
       return 0x0;
     }
-      
+
 
   return prog;
 }
@@ -296,76 +296,83 @@ Vao*
 vao_create(None)
 {
   Vao* vao;
+
   vao = new(Vao);
   if (vao == null)
     {
       PRT_ERROR("error, can't allocate memory for vao\n");
       return null;
     }
+  memset(vao, 0x0, sizeof(Vao));
+
   glGenVertexArrays(1, &(vao->ptr)); /* generate vao on gpu */
+  vao_bind(vao);
   return vao;
 }
 
 Int
 vao_bind(Vao* vao)
 {
-  glBindVertexArray(vao->ptr);  /* select vao */
+  if (vao == null)
+    glBindVertexArray(null);
+  else
+    glBindVertexArray(vao->ptr);
   return error_none;
 }
 
-Vbo*
-vbo_create(None)
+Int
+vao_add(Vao* vao, UInt size, Ptr data)
 {
-  Vbo* vbo;
-  vbo = new(Vbo);
-  if (vbo == null)
+  GLuint vbo;
+
+  if (vao == null)
     {
-      PTR_ERROR("error, can't allocate memory for vbo\n");
-      return null;
+      PRT_ERROR("error, tring to add data into unexisted vao\n");
+      return error_null;
     }
-  glGenBuffers(1, &(vbo->ptr)); /* generate vbo on gpu */
-  return vbo;
+  vao_bind(vao);
+
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, size*sizeof(GL_FLOAT), data, GL_STATIC_DRAW);
+  glVertexAttribPointer(vao->len, size, GL_FLOAT, GL_FALSE, 0, null);
+
+  vao->vbos[vao->len++] = vbo;
+  return error_none;
 }
 
 Int
-vbo_bind(Vbo* vbo)
+vao_draw(Vao* vao, GLsizei count)
 {
-  if (vbo == null)
+  if (vao == null)
     {
-      PTR_ERROR("error, trying to bind nonexistent vbo\n");
+      PRT_ERROR("error, can't draw null-vao\n");
       return error_null;
     }
-  glBindBuffer(GL_ARRAY_BUFFER, vbo->ptr); /* select vbo as array buffer */
-  return;
-}
 
-Int
-vbo_load_data(Vbo* vbo, Ptr data, UInt size, GLenum type)
-{
-  if (vbo == null)
-    {
-      PTR_ERROR("error, can't load data into nonexistent vbo\n");
-      return error_null;
-    }
-  glBufferData(GL_ARRAY_BUFFER, size, data, type);
-  vbo->size = size;
-  return;
+  vao_bind(vao);
+
+  for (UInt i = 0x0; i < vao->len; ++i)
+    glEnableVertexAttribArray(i);
+  glDrawArrays(GL_TRIANGLES, 0, count);
+  for (UInt i = 0x0; i < vao->len; ++i)
+    glDisableVertexAttribArray(i);
 }
 
 GLuint
 shader_program_new_unique(GLuint vert, GLuint frag)
 {
   GLuint prog;
-  
+
   if ((prog = shader_program_new(vert, frag)) == 0x0) /* if can't create program */
     {
       PRT_ERROR(" => error, can't create shader program\n");
       return 0x0;
     }
-  
+
   glDeleteShader(vert);         /* delete two shaders that already was copied */
   glDeleteShader(frag);
-  
+
   return prog;
 }
 
@@ -376,10 +383,9 @@ main(None)
   GLuint shader_program,
     shader_frag,
     shader_vert;
-  Vao vao;
-  Vbo vbo;
+  Vao* vao;
   uint32_t ebo;
-  
+
   if (game_system_init() < error_none) /* init system */
     {
       PRT_ERROR(" => error, can't init game system\n");
@@ -405,14 +411,14 @@ main(None)
     {
       PRT_ERROR(" => error, can't use shaders\n");
     }
-      
+
 
   GLfloat verts[] =
     {
       -1.0f,  0.0f,  0.0f, /* UL */
       +1.0f,  0.0f,  0.0f, /* UR */
       +1.0f, -1.0f,  0.0f, /* DR */
-       
+
       -1.0f, -1.0f,  0.0f, /* DL */
     };
 
@@ -421,28 +427,18 @@ main(None)
       0x0, 0x1, 0x2,
       0x2, 0x3, 0x0
     };
-  
+
   /* arrays */
   vao = vao_create();
-  vao_bind(vao);
-  vbo = vbo_create();
-  vbo_bind(vbo);
-  vbo_load_data(vbo, verts, sizeof(verts), GL_STATIC_DRAW);
-  glVertexAttribPointer(0x0,
-                        0x3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        0x3 * sizeof(GLfloat),
-                        null); /* create information about buffer */
-  glEnableVertexAttribArray(0); /* activate buffer */
+  vao_add(vao, sizeof(verts), verts);
 
   glGenBuffers(1, &ebo);        /* generate ebo */
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); /* bind vao element array to ebo */
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                sizeof(indices),
                indices,
-               GL_STATIC_DRAW); /* copy indices to ebo */  
-  
+               GL_STATIC_DRAW); /* copy indices to ebo */
+
   game_options->wireframe_mode = 0x1; /* enable wireframe mode */
   game_options->is_game_running = 0x1; /* start game */
 
@@ -454,22 +450,19 @@ main(None)
       game_options->is_game_running &= /* simple, if not is_run == true
                                           and (should_close == false) then exit */
         glfwWindowShouldClose(game_system->window) == GLFW_FALSE;
-      
+
       glClear(GL_COLOR_BUFFER_BIT); /* clear background */
 
       /* main code */
       glUseProgram(shader_program); /* use shader program */
-      vao_bind(vao);
-      
-      glDrawElements(GL_TRIANGLES, 0x6, GL_UNSIGNED_INT, 0x0);
-      
+      vao_draw(vao, 0x3);
+
       glfwSwapBuffers(game_system->window); /* Print changes */
       glfwPollEvents();         /* Get all events from system */
     }
 
   game_options_terminate();     /* terminate allocated options for game */
   game_system_terminate();      /* terminate all render systems */
-  
+
   return error_none;
 }
-
