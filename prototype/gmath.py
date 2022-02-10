@@ -17,3 +17,11 @@ class Vector2:
 
     def __str__(self):
         return f"<{self.x}; {self.y}>"
+
+    def __add__(self, vec):
+        if not isinstance(vec, Vector2):
+            return self
+        self.x += vec.x
+        self.y += vec.y
+        print(self)
+        return self

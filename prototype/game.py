@@ -4,11 +4,13 @@ from pygame.locals import *
 
 from entity import Entity
 from player import Player
+import gmath
 
 class GameSystem:            
     def __init__(self):
         pygame.init()
         self.surface = pygame.display.set_mode((640, 360))
+        self.kpressed = list()
         self.is_running = True
         self.rend_ents = list()
         self.player = Player()
@@ -21,10 +23,8 @@ class GameSystem:
             if self.is_running == False:
                 break
 
-            self.player.rel_move(self.player.speed.x, 0)
-            pos = self.player.get_pos()
-            if pos.x >= 640 or pos.x < 0:
-                self.player.speed.x *= -1
+            self.player.rel_move_vec(gmath.Vector2(self.kpressed[K_f]-self.kpressed[K_b],
+                                                   self.kpressed[K_n]-self.kpressed[K_p]))
             
             self.render()
     
@@ -34,7 +34,8 @@ class GameSystem:
             if event.type == QUIT:
                 pygame.quit()
                 self.is_running = False
-        if pygame.key.get_pressed()[K_q]:
+        self.kpressed = pygame.key.get_pressed()
+        if self.kpressed[K_q]:
             self.is_running = False
                     
 

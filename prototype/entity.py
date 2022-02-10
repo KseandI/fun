@@ -27,6 +27,11 @@ class Entity(pygame.sprite.Sprite):
         self.update()
         return
 
+    def rel_move_vec(self, vec):
+        self.position += vec
+        self.update()
+        return
+
     def get_pos(self):
         return self.position
 
