@@ -1,18 +1,17 @@
 
 from entity import Entity
-import gmath
+from pygame.math import Vector2
 
 
 class Camera():
-    def __init__(self, surface, size = gmath.Vector2(200, 200)):
-        self.position = gmath.Vector2(0, 0)
+    def __init__(self, surface, size = Vector2(200, 200)):
+        self.position = Vector2(0, 0)
         self.size = size
         self.surface = surface
         self.rect = self.surface.get_rect()
 
     def update(self):
-        self.rect.update(self.position.x, self.position.y,
-                         self.size.x, self.size.y)
+        self.rect = self.position
         return
 
     def render_entity(self, ent: Entity) -> int:
@@ -32,8 +31,8 @@ class Camera():
         self.update()
         return
 
-    def move_vec(self, vec: gmath.Vector2):
-        if not isinstance(vec, gmath.Vector2):
+    def move_vec(self, vec):
+        if not isinstance(vec, Vector2):
             raise TypeError('tried to move_vec without vec')
         self.position = vec.copy()
         return

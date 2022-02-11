@@ -1,17 +1,17 @@
 
 import pygame
 from pygame.locals import *
+from pygame.math import Vector2
 
 from entity import Entity
 from player import Player
 from camera import Camera
-import gmath
 
 
 class GameSystem:
     def __init__(self):
         pygame.init()
-        self.window_size = gmath.Vector2(640, 360)
+        self.window_size = Vector2(640, 360)
         self.surface = pygame.display.set_mode((self.window_size.x,
                                                 self.window_size.y))
         self.kpressed = list()
@@ -35,8 +35,7 @@ class GameSystem:
 
             rel_x = self.kpressed[K_f] - self.kpressed[K_b]
             rel_y = self.kpressed[K_n] - self.kpressed[K_p]
-            relative_movement = (gmath.Vector2(rel_x, rel_y)
-                                 * self.player.speed)
+            relative_movement = (Vector2(rel_x, rel_y) * self.player.speed)
             self.player.rel_move_vec(relative_movement)
 
             self.camera.move_vec(self.player.position

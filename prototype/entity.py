@@ -1,15 +1,15 @@
 
 import pygame
-import gmath
+from pygame.math import Vector2
 
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.size = gmath.Vector2(32, 32)
+        self.size = Vector2(32, 32)
         self.surf = pygame.Surface((self.size.x, self.size.y))
         self.rect = self.surf.get_rect()
-        self.position = gmath.Vector2()
+        self.position = Vector2()
         self.surf.fill((0, 0, 255))
         return
 
