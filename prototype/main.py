@@ -3,7 +3,7 @@
 import pygame
 from pygame.locals import *
 from pygame.math import Vector2
-
+from logger import *
 
 class PgameMan:
     def __init__(self,
@@ -48,13 +48,6 @@ class DrawEntity(Entity):
 class Player(DrawEntity):
     def __init__(self):
         super().__init__()
-        self.velocity: Vector2
-        self.acceleration: Vector2
-        self.ac_speed: float
-        
-        self.velocity = Vector2((0, 0))
-        self.acceleration = Vector2((0, 0))
-        self.ac_speed = 0.5
         return
 
 
@@ -98,21 +91,20 @@ def main():
     player = Player()
     game = Game(camera)
 
+    log_set_type(LogType.debug)
+
+    log_print("debug", LogType.debug)
+    log_print("info", LogType.info)
+    log_print("warning", LogType.warning)
+    log_print("error", LogType.error)
+    log_print("critical", LogType.critical)
+
     game.add_render(player)
 
     while game.is_running:
 
         ## logic ##
 
-        friction = 60
-        player.acceleration = Vector2(0, 0)
-        pkeys = pman.get_keys()
-        player.acceleration.x += ((pkeys[K_f] - pkeys[K_b])
-                                  * player.ac_speed)
-        player.acceleration += player.velocity * friction
-        player.velocity += player.acceleration
-        player.position += player.velocity + player.acceleration / 2
-        print(player.position)
 
         ## render ##
 
@@ -130,5 +122,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
 
 
