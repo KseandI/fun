@@ -53,16 +53,18 @@ class Camera(Entity):
     def __init__(self, surface):
         super().__init__()
         self.surface: pygame.Surface
+        self.position: Vector2
         self.init(surface)
         return
 
     def init(self, surface):
         self.surface = surface
+        self.position = Vector2((0, 0))
         return
 
     def render(self,
                entity: DrawEntity):
-        self.surface.blit(entity.surface, entity.rect)
+        self.surface.blit(entity.surface, entity.rect.topleft - self.position)
         return
 
 
