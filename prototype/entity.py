@@ -2,6 +2,7 @@
 import pygame
 import gmath
 
+
 class Entity(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -43,4 +44,3 @@ class Entity(pygame.sprite.Sprite):
 
     def __str__(self):
         return f"<entity: {self.position.x}; {self.position.y}>"
-    

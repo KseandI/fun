@@ -1,6 +1,4 @@
 
-import math
-
 class Vector2:
 
     def __init__(self, x = 0, y = 0):
@@ -37,9 +35,3 @@ class Vector2:
         if not isinstance(vec, Vector2):
             raise TypeError('tried to subtract value from vec2')
         return Vector2(self.x - vec.x, self.y - vec.y)
-
-
-
-
-
-
