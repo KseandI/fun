@@ -20,6 +20,14 @@ class PgameMan:
         pygame.display.set_caption(name)
         return
 
+    def clear(self,
+              color: (int, int, int)):
+        self.surface.fill(color)
+        return
+
+    def update(self):
+        pygame.display.update()
+        return
 
 class Entity():
     def __init__(self):
@@ -42,12 +50,19 @@ class DrawEntity(Entity):
 
 
 class Camera(Entity):
-    def __init__(self):
+    def __init__(self, surface):
         super().__init__()
-        self.init()
+        self.surface: pygame.Surface
+        self.init(surface)
         return
 
-    def init(self):
+    def init(self, surface):
+        self.surface = surface
+        return
+
+    def render(self,
+               entity: DrawEntity):
+        self.surface.blit(entity.surface, entity.rect)
         return
 
 
@@ -56,22 +71,37 @@ class Game():
                  camera: Camera):
         self.camera: Camera
         self.is_running: bool
+        self.render_stack: list
         self.init(camera)
 
     def init(self, camera):
         self.camera = camera
+        self.render_stack = list()
         self.is_running = True
+        return
+
+    def add_render(self,
+                   entity: DrawEntity):
+        self.render_stack.append(entity)
+        return
 
 
 def main():
     pman = PgameMan((640, 360), "fun")
-    camera = Camera()
-    ent = DrawEntity()
+    camera = Camera(pman.surface)
+    player = DrawEntity()
     game = Game(camera)
+
+    game.add_render(player)
 
     while game.is_running:
 
-        # code goes here
+        pman.clear((0, 255, 255))
+
+        for ent in game.render_stack:
+            camera.render(ent)
+
+        pman.update()
         
         for event in pygame.event.get():
             if event.type == QUIT:
