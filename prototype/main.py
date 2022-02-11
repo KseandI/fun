@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from game import GameSystem
+import pygame
+from pygame.locals import *
+from pygame.math import Vector2
 
 
 def main():
-    game = GameSystem()
-    game.loop()
+    pygame.init()
 
 
 if __name__ == "__main__":
