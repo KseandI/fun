@@ -9,16 +9,11 @@ class PgameMan:
     def __init__(self,
                  size: (int, int) = (640, 360),
                  name: str = "window"):
-        """ for variable declorations """
         self.surface: pygame.Surface
-        self.init(size, name)
-
         
-    def init(self, size, name):
         pygame.init()
         self.surface = pygame.display.set_mode(size)
         pygame.display.set_caption(name)
-        return
 
     def clear(self,
               color: (int, int, int)):
@@ -29,6 +24,10 @@ class PgameMan:
         pygame.display.update()
         return
 
+    def get_keys(self):
+        return pygame.key.get_pressed()
+
+    
 class Entity():
     def __init__(self):
         return
@@ -38,14 +37,24 @@ class DrawEntity(Entity):
     def __init__(self):
         super().__init__()
         self.surface: pygame.Surface
-        self.rect: pygame.rect
-        self.init()
-        return
-
-    def init(self):
+        self.position: Vector2
+        
         self.surface = pygame.Surface((16, 16))
         self.surface.fill((0, 255, 0))
-        self.rect = self.surface.get_rect()
+        self.position = Vector2((0, 0))
+        return
+
+    
+class Player(DrawEntity):
+    def __init__(self):
+        super().__init__()
+        self.velocity: Vector2
+        self.acceleration: Vector2
+        self.ac_speed: float
+        
+        self.velocity = Vector2((0, 0))
+        self.acceleration = Vector2((0, 0))
+        self.ac_speed = 0.5
         return
 
 
@@ -54,17 +63,14 @@ class Camera(Entity):
         super().__init__()
         self.surface: pygame.Surface
         self.position: Vector2
-        self.init(surface)
-        return
-
-    def init(self, surface):
+        
         self.surface = surface
         self.position = Vector2((0, 0))
         return
 
     def render(self,
                entity: DrawEntity):
-        self.surface.blit(entity.surface, entity.rect.topleft - self.position)
+        self.surface.blit(entity.surface, entity.position - self.position)
         return
 
 
@@ -74,9 +80,7 @@ class Game():
         self.camera: Camera
         self.is_running: bool
         self.render_stack: list
-        self.init(camera)
 
-    def init(self, camera):
         self.camera = camera
         self.render_stack = list()
         self.is_running = True
@@ -91,12 +95,26 @@ class Game():
 def main():
     pman = PgameMan((640, 360), "fun")
     camera = Camera(pman.surface)
-    player = DrawEntity()
+    player = Player()
     game = Game(camera)
 
     game.add_render(player)
 
     while game.is_running:
+
+        ## logic ##
+
+        friction = 60
+        player.acceleration = Vector2(0, 0)
+        pkeys = pman.get_keys()
+        player.acceleration.x += ((pkeys[K_f] - pkeys[K_b])
+                                  * player.ac_speed)
+        player.acceleration += player.velocity * friction
+        player.velocity += player.acceleration
+        player.position += player.velocity + player.acceleration / 2
+        print(player.position)
+
+        ## render ##
 
         pman.clear((0, 255, 255))
 
