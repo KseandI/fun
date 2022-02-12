@@ -48,6 +48,9 @@ class DrawEntity(Entity):
 class Player(DrawEntity):
     def __init__(self):
         super().__init__()
+        self.speed: float
+
+        self.speed = 0.2
         return
 
 
@@ -97,6 +100,11 @@ def main():
 
         ## logic ##
 
+        pkeys = pman.get_keys()
+        wish_dir = (Vector2(pkeys[K_f]-pkeys[K_b],
+                            pkeys[K_n]-pkeys[K_p])
+                    * player.speed)
+        player.position += wish_dir
 
         ## render ##
 
