@@ -3,7 +3,7 @@
 import pygame
 from pygame.locals import *
 from pygame.math import Vector2
-from logger import *
+
 
 class PgameMan:
     def __init__(self,
@@ -90,14 +90,6 @@ def main():
     camera = Camera(pman.surface)
     player = Player()
     game = Game(camera)
-
-    log_set_type(LogType.debug)
-
-    log_print("debug", LogType.debug)
-    log_print("info", LogType.info)
-    log_print("warning", LogType.warning)
-    log_print("error", LogType.error)
-    log_print("critical", LogType.critical)
 
     game.add_render(player)
 
