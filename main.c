@@ -314,7 +314,7 @@ Int
 vao_bind(Vao* vao)
 {
   if (vao == null)
-    glBindVertexArray(null);
+    glBindVertexArray(0x0);
   else
     glBindVertexArray(vao->ptr);
   return error_none;
