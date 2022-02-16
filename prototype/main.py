@@ -51,7 +51,7 @@ class Player(DrawEntity):
         self.speed: float
         self.velocity: Vector2
 
-        self.speed = 0.2
+        self.speed = 1
         self.velocity = Vector2(0, 0)
         return
 
@@ -95,6 +95,8 @@ def main():
     camera = Camera(pman.surface)
     player = Player()
     game = Game(camera)
+        
+    player.speed = 10
 
     game.add_render(player)
 
