@@ -89,7 +89,7 @@ class Game():
         self.render_stack.append(entity)
         return
 
-
+    
 def main():
     pman = PgameMan((640, 360), "fun")
     camera = Camera(pman.surface)
@@ -105,11 +105,11 @@ def main():
         ## logic ##
 
         pkeys = pman.get_keys()
-        wish_dir = Vector2(pkeys[K_f]-pkeys[K_b],
-                           pkeys[K_n]-pkeys[K_p])
-        player.velocity = wish_dir * player.speed
+
+        # todo: add smooth acceleration
+        wish_dir = Vector2(pkeys[K_f]-pkeys[K_b], 0)
+        player.velocity = wish_dir * player.speed / float.fromhex('0x50')
         player.position += player.velocity
-        print(player.velocity)
 
         ## render ##
 
