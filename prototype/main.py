@@ -107,7 +107,7 @@ def main():
         pkeys = pman.get_keys()
 
         # todo: add smooth acceleration
-        wish_dir = Vector2(pkeys[K_f]-pkeys[K_b], 0)
+        wish_dir = Vector2(pkeys[K_RIGHT]-pkeys[K_LEFT], 0)
         player.velocity = wish_dir * player.speed / float.fromhex('0x50')
         player.position += player.velocity
 
