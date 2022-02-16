@@ -10,7 +10,7 @@ class PgameMan:
                  size: (int, int) = (640, 360),
                  name: str = "window"):
         self.surface: pygame.Surface
-        
+
         pygame.init()
         self.surface = pygame.display.set_mode(size)
         pygame.display.set_caption(name)
@@ -27,7 +27,7 @@ class PgameMan:
     def get_keys(self):
         return pygame.key.get_pressed()
 
-    
+
 class Entity():
     def __init__(self):
         return
@@ -38,13 +38,13 @@ class DrawEntity(Entity):
         super().__init__()
         self.surface: pygame.Surface
         self.position: Vector2
-        
+
         self.surface = pygame.Surface((16, 16))
         self.surface.fill((0, 255, 0))
         self.position = Vector2((0, 0))
         return
 
-    
+
 class Player(DrawEntity):
     def __init__(self):
         super().__init__()
@@ -61,7 +61,7 @@ class Camera(Entity):
         super().__init__()
         self.surface: pygame.Surface
         self.position: Vector2
-        
+
         self.surface = surface
         self.position = Vector2((0, 0))
         return
@@ -89,13 +89,13 @@ class Game():
         self.render_stack.append(entity)
         return
 
-    
+
 def main():
     pman = PgameMan((640, 360), "fun")
     camera = Camera(pman.surface)
     player = Player()
     game = Game(camera)
-        
+
     player.speed = 10
 
     game.add_render(player)
@@ -119,7 +119,7 @@ def main():
             camera.render(ent)
 
         pman.update()
-        
+
         for event in pygame.event.get():
             if event.type == QUIT:
                 game.is_running = False
@@ -127,14 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
