@@ -1,7 +1,0 @@
-
-code readability
- * move vao, vbo etc into seperated files
-
-ideas
-
-main todo
