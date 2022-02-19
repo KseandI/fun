@@ -81,6 +81,5 @@ main(None)
       return error_upper;
     }
 
-  syslayer_terminate();
-  return ok;
+  return syslayer_terminate();
 }
