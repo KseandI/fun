@@ -49,6 +49,16 @@ typedef struct GameSystem
   Bool is_running;
 } GameSystem;
 
+typedef struct GameColor
+{
+  SInt r, g, b, a;
+} GameColor;
+
+typedef struct GameRect
+{
+  Float x, y, w, h;
+} GameRect;
+
 GameSystem* gamesystem;
 
 Int
@@ -166,14 +176,15 @@ syslayer_get_events(None)
 }
 
 Int
-syslayer_clear_window(SInt r, SInt g, SInt b, SInt a)
+syslayer_clear_window(GameColor color)
 {
   if (syslayer == null || syslayer->is_render_inited == false)
     {
       fprintf(stderr, "warning, tried to clear non-intied window\n");
       return warning_uninited;
     }
-  SDL_SetRenderDrawColor(syslayer->render, r, g, b, a);
+  SDL_SetRenderDrawColor(syslayer->render,
+                         color.r, color.g, color.b, color.a);
   SDL_RenderClear(syslayer->render);
   return ok;
 }
@@ -191,6 +202,21 @@ syslayer_draw_window(None)
 }
 
 Int
+syslayer_draw_rect(GameRect rect, GameColor color)
+{
+  SDL_SetRenderDrawColor(syslayer->render, color.r, color.g, color.b, color.a);
+  SDL_FRect sdlrect = (SDL_FRect)
+    {
+      .x = rect.x,
+      .y = rect.y,
+      .w = rect.w,
+      .h = rect.h
+    };
+  SDL_RenderDrawRectF(syslayer->render, &sdlrect);
+  return ok;
+}
+
+Int
 game_process_events(None)
 {
   syslayer_get_events();
@@ -200,6 +226,10 @@ game_process_events(None)
 Int
 main(None)
 {
+  GameColor background_color = (GameColor)
+    {
+      .r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff,
+    };
   if (syslayer_init() < ok)
     {
       fprintf(stderr, "error, can't init system layer\n");
@@ -215,7 +245,8 @@ main(None)
 
   while (gamesystem->is_running == true)
     {
-      syslayer_clear_window(0, 0xff, 0xff, 0xff);
+      /*syslayer_draw_rect( */
+      syslayer_clear_window(background_color);
       syslayer_draw_window();
       game_process_events();
     }
