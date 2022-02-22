@@ -212,7 +212,7 @@ syslayer_draw_rect(GameRect rect, GameColor color)
       .w = rect.w,
       .h = rect.h
     };
-  SDL_RenderDrawRectF(syslayer->render, &sdlrect);
+  SDL_RenderFillRectF(syslayer->render, &sdlrect);
   return ok;
 }
 
@@ -227,9 +227,12 @@ Int
 main(None)
 {
   GameColor background_color = (GameColor)
-    {
-      .r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff,
-    };
+    { .r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff, };
+  GameRect player = (GameRect)
+    { .x = 0x0, .y = 0x0, .w = 0x10, .h = 0x10 };
+  GameColor player_color = (GameColor)
+    { .r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff, };
+  
   if (syslayer_init() < ok)
     {
       fprintf(stderr, "error, can't init system layer\n");
@@ -245,8 +248,8 @@ main(None)
 
   while (gamesystem->is_running == true)
     {
-      /*syslayer_draw_rect( */
       syslayer_clear_window(background_color);
+      syslayer_draw_rect(player, player_color);
       syslayer_draw_window();
       game_process_events();
     }
