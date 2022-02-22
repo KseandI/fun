@@ -1,65 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 
-#define SDL_DISABLE_IMMINTRIN_H
-#include <SDL2/SDL.h>
+#include "standard.h"
+#include "defines.h"
+#include "types.h"
+#include "in_system.h"
+#include "system.h"
 
-/* my types */
-typedef int32_t Int;
-typedef int8_t SInt;
-typedef uint32_t UInt;
-typedef double Float;
-typedef float SFloat;
-typedef int_fast8_t Bool;
-typedef void None;
-typedef void* Ptr;
-
-#define null NULL
-#define true 0x1
-#define false 0x0
-
-/* return codes table */
-#define error_upper -0x3
-#define error_out_of_mem -0x2
-#define error_render -0x1
-#define ok 0x0
-#define warning_already_done 0x1
-#define warning_uninited 0x2
-
-/* everything to sting */
-#define _STR(X) #X
-#define STR(X) _STR(X)
-
-/* allocate new type */
-#define new(X) (X*) malloc(sizeof(X))
-
-typedef struct SystemLayer
-{
-  Bool is_render_inited;
-  Ptr window;
-  Ptr render;
-} SystemLayer;
-
-SystemLayer* syslayer;
-
-typedef struct GameSystem
-{
-  Bool is_running;
-} GameSystem;
-
-typedef struct GameColor
-{
-  SInt r, g, b, a;
-} GameColor;
-
-typedef struct GameRect
-{
-  Float x, y, w, h;
-} GameRect;
-
-GameSystem* gamesystem;
+SystemLayer* syslayer = null;
+GameSystem* gamesystem = null;
 
 Int
 syslayer_init(None)
@@ -104,6 +51,9 @@ syslayer_init(None)
       fprintf(stderr, "error, can't create render\n");
       return error_render;
     }
+
+  syslayer->keys = new_arr(Bool, KEYS_LEN);
+  memset(syslayer->keys, 0x0, sizeof(Bool)*KEYS_LEN);
 
   
   syslayer->is_render_inited = true;
@@ -170,6 +120,13 @@ syslayer_get_events(None)
         {
         case SDL_QUIT:
           game_user_terminate();
+          break;
+        case SDL_KEYDOWN:
+          syslayer->keys[event.key.keysym.scancode] = true;
+          break;
+        case SDL_KEYUP:
+          syslayer->keys[event.key.keysym.scancode] = false;
+          break;
         }
     }
   return ok;
@@ -220,6 +177,7 @@ Int
 game_process_events(None)
 {
   syslayer_get_events();
+  
   return ok;
 }
 
@@ -232,6 +190,7 @@ main(None)
     { .x = 0x0, .y = 0x0, .w = 0x10, .h = 0x10 };
   GameColor player_color = (GameColor)
     { .r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff, };
+  Float player_speed = 0x0.1p-1;
   
   if (syslayer_init() < ok)
     {
@@ -248,8 +207,16 @@ main(None)
 
   while (gamesystem->is_running == true)
     {
+      Vector2 wish_dir;
+      
       syslayer_clear_window(background_color);
+
+      wish_dir.x = syslayer->keys[KEY_RIGHT] - syslayer->keys[KEY_LEFT];
+      wish_dir.y = syslayer->keys[KEY_DOWN] - syslayer->keys[KEY_UP];
+      player.x += wish_dir.x * player_speed;
+      
       syslayer_draw_rect(player, player_color);
+      
       syslayer_draw_window();
       game_process_events();
     }
