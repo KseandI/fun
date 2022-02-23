@@ -25,19 +25,6 @@ typedef void* Ptr;
 #define warning_already_done 0x1
 #define warning_uninited 0x2
 
-typedef struct SystemLayer
-{
-  Bool is_render_inited;
-  Ptr window;
-  Ptr render;
-  Bool* keys;
-} SystemLayer;
-
-typedef struct GameSystem
-{
-  Bool is_running;
-} GameSystem;
-
 typedef struct GameColor
 {
   SInt r, g, b, a;

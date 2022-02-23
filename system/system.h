@@ -19,6 +19,27 @@ typedef enum KEYS
     KEYS_LEN = SDL_NUM_SCANCODES
   } KEYS;
 
+typedef struct SystemLayer
+{
+  Bool is_render_inited;
+  Ptr window;
+  Ptr render;
+  Bool* keys;
+} SystemLayer;
+
+typedef struct RenderObject
+{
+  GameRect rect;
+  GameColor color;
+} RenderObject;
+
+typedef struct GameSystem
+{
+  Bool is_running;
+  UInt objects_len;
+  RenderObject** objects; /* array of pointers */
+} GameSystem;
+
 extern SystemLayer* syslayer;
 extern GameSystem* gamesystem;
 
@@ -33,5 +54,8 @@ Int game_init(None);
 Int game_terminate(None);
 Int game_user_terminate(None);
 Int game_process_events(None);
+RenderObject* game_create_object(None);
+Int game_draw_object(RenderObject* object);
+Int game_draw_objects(None);
 
 #endif /* GAME_SYSTEM_INC */

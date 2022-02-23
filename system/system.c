@@ -2,11 +2,12 @@
 #include "standard.h"
 #include "defines.h"
 #include "types.h"
-#include "in_system.h"
 #include "system.h"
 
+#define SDL_DISABLE_IMMINTRIN_H
+#include <SDL2/SDL.h>
+
 SystemLayer* syslayer = null;
-GameSystem* gamesystem = null;
 
 Int
 syslayer_init(None)
@@ -78,39 +79,6 @@ syslayer_terminate(None)
 }
 
 Int
-game_init(None)
-{
-  gamesystem = new(GameSystem);
-  if (gamesystem == null)
-    {
-      fprintf(stderr, "error, can't allocate memory for game\n");
-      return error_out_of_mem;
-    }
-  return ok;
-}
-
-Int
-game_terminate(None)
-{
-  if (gamesystem == null)
-    {
-      fprintf(stderr, "warning, tried to terminate non-inited game system\n");
-      return warning_already_done;
-    }
-  free(gamesystem);
-  return ok;
-}
-
-Int
-game_user_terminate(None)
-{
-  gamesystem->is_running = false;
-  game_terminate();
-  syslayer_terminate();
-  return ok;
-}
-
-Int
 syslayer_get_events(None)
 {
   SDL_Event event;
@@ -173,10 +141,124 @@ syslayer_draw_rect(GameRect rect, GameColor color)
   return ok;
 }
 
+
+/* === game system === */
+
+GameSystem* gamesystem = null;
+
 Int
 game_process_events(None)
 {
   syslayer_get_events();
   
+  return ok;
+}
+
+Int
+game_init(None)
+{
+  gamesystem = new(GameSystem);
+  if (gamesystem == null)
+    {
+      fprintf(stderr, "error, can't allocate memory for game\n");
+      return error_out_of_mem;
+    }
+  memset(gamesystem, 0x0, sizeof(GameSystem));
+  
+  return ok;
+}
+
+RenderObject*
+game_create_object(None)
+{
+  RenderObject* object;
+  
+  if (gamesystem == null)
+    {
+      fprintf(stderr, "warning, tried to create objects while game wasn't inited\n");
+      return null;
+    }
+  
+  /* TODO: so far, if an malloc error occurs, all objects will be lost
+     and this will lead to memory leak */
+  gamesystem->objects = realloc(gamesystem->objects, ++(gamesystem->objects_len));
+  if (gamesystem->objects == null)
+    {
+      fprintf(stderr, "critical, tried to allocate new object, but occurs memory error\n"
+              "and now all render objects are gone\n");
+      return null;
+    }
+  
+  /* result = last object = new object */
+  object = gamesystem->objects[gamesystem->objects_len-0x1] = new(RenderObject);
+  if (object == null)
+    {
+      fprintf(stderr, "error, can't allocate memory for object\n");
+      return null;
+    }
+  
+  memset(object, 0x0, sizeof(RenderObject));
+  
+  /* Default parameters */
+  object->rect = (GameRect)
+    { .x = 0x0, .y = 0x0, .w = 0x10, .h = 0x10 };
+  object->color = (GameColor)
+    { .r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff };
+
+  return object;
+}
+
+Int
+game_draw_object(RenderObject* object)
+{
+  if (object == null || gamesystem == null ||
+      syslayer == null || syslayer->is_render_inited == false)
+    {
+      fprintf(stderr, "warning, tried to draw object on uninited scene\n");
+      return warning_uninited;
+    }
+  syslayer_draw_rect(object->rect, object->color);
+  return ok;
+}
+
+Int
+game_draw_objects(None)
+{
+  if (gamesystem == null || gamesystem->is_running == false)
+    {
+      fprintf(stderr, "warning, tired to draw objects while game wasn't running\n");
+      return warning_uninited;
+    }
+  for (UInt iter = 0x0; iter < gamesystem->objects_len; ++iter)
+    {
+      RenderObject* object;
+      object = gamesystem->objects[iter];
+      if (object == null)
+        {
+          fprintf(stderr, "warning, tried to draw null object\n");
+        }
+      game_draw_object(object);
+    }
+  return ok;
+}
+
+Int
+game_terminate(None)
+{
+  if (gamesystem == null)
+    {
+      fprintf(stderr, "warning, tried to terminate non-inited game system\n");
+      return warning_already_done;
+    }
+  free(gamesystem);
+  return ok;
+}
+
+Int
+game_user_terminate(None)
+{
+  gamesystem->is_running = false;
+  game_terminate();
+  syslayer_terminate();
   return ok;
 }
