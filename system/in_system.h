@@ -5,14 +5,6 @@
 #define SDL_DISABLE_IMMINTRIN_H
 #include <SDL2/SDL.h>
 
-typedef enum KEYS
-  {
-    KEY_NONE = 0x0,
-    KEY_UP = SDL_SCANCODE_UP,
-    KEY_RIGHT = SDL_SCANCODE_RIGHT,
-    KEY_DOWN = SDL_SCANCODE_DOWN,
-    KEY_LEFT = SDL_SCANCODE_LEFT,
-    KEYS_LEN = SDL_NUM_SCANCODES
-  } KEYS;
+#include "system.h"
 
 #endif /* GAME_IN_SYSTEM_INC */
