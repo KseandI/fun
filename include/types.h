@@ -17,11 +17,13 @@ typedef void* Ptr;
 #define true 0x1
 #define false 0x0
 
+#define error_system -0x3
 #define error_upper -0x2
 #define error_out_of_mem -0x1
 #define ok 0x0
-#define warn_inited 0x1
+#define warn_init 0x1
 #define warn_already 0x2
+#define warn_uninited 0x3
 
 typedef struct Vector2
 {
