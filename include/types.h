@@ -1,15 +1,15 @@
 
-#ifndef GAME_TYPES_INC
-#define GAME_TYPES_INC
+#ifndef GAME_INCLUDE_TYPES
+#define GAME_INCLUDE_TYPES
 
-#include "standard.h"
+#include <stdint.h>
 
 typedef int32_t Int;
-typedef int8_t SInt;
-typedef uint32_t UInt;
 typedef double Float;
-typedef float SFloat;
+typedef uint32_t UInt;
+typedef int_fast8_t SInt;
 typedef int_fast8_t Bool;
+typedef float SFloat;
 typedef void None;
 typedef void* Ptr;
 
@@ -17,13 +17,16 @@ typedef void* Ptr;
 #define true 0x1
 #define false 0x0
 
-/* return codes table */
-#define error_upper -0x3
-#define error_out_of_mem -0x2
-#define error_render -0x1
+#define error_upper -0x2
+#define error_out_of_mem -0x1
 #define ok 0x0
-#define warning_already_done 0x1
-#define warning_uninited 0x2
+#define warn_inited 0x1
+#define warn_already 0x2
+
+typedef struct Vector2
+{
+  Float x, y;
+} Vector2;
 
 typedef struct GameColor
 {
@@ -35,10 +38,4 @@ typedef struct GameRect
   Float x, y, w, h;
 } GameRect;
 
-typedef struct Vector2
-{
-  Float x, y;
-} Vector2;
-
-
-#endif /* GAME_TYPES_INC */
+#endif /* GAME_INCLUDE_TYPES */

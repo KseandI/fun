@@ -1,46 +1,64 @@
 
+#include "syslayer/syslayer.h"
 #include "standard.h"
 #include "types.h"
-#include "defines.h"
-#include "game/game.h"
+#include "define.h"
 
+typedef struct Global
+{
+  Bool is_running;
+} Global;
+
+Global* global = null;
+
+Int
+global_init(None)
+{
+  global = new(Global);
+  if (global == null)
+    {
+      fprintf(stderr, "error, can't allocate global map\n");
+      return error_out_of_mem;
+    }
+  memset(global, 0x0, sizeof(Global));
+  
+  return ok;
+}
+
+Int
+global_terminate(None)
+{
+  if (global == null)
+    {
+      fprintf(stderr, "warn, global termination called twice\n");
+      return warn_already;
+    }
+
+  free(global);
+  return ok;
+}
 
 Int
 main(None)
 {
-  GameColor background_color = (GameColor)
-    { .r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff, };
-  RenderObject* player;
-  Float player_speed = 0x0.1p-1;
-  
-  if (game_init() < ok)
+  if (syslayer_init() < ok)
     {
-      fprintf(stderr, "error, can't init game\n");
+      fprintf(stderr, " => can't init syslayer\n");
       return error_upper;
     }
 
-  player = game_create_renderobject();
-  
-  gamesystem->is_running = true;
-
-  while (gamesystem->is_running == true)
+  if (global_init() < ok)
     {
-      Vector2 wish_dir;
-      
-      syslayer_clear_window(background_color);
-
-      wish_dir.x = syslayer->keys[KEY_RIGHT] - syslayer->keys[KEY_LEFT];
-      wish_dir.y = syslayer->keys[KEY_DOWN] - syslayer->keys[KEY_UP];
-      player->rect.x += wish_dir.x * player_speed;
-      
-      game_draw_renderobjects();
-      
-      syslayer_draw_window();
-      game_process_events();
+      fprintf(stderr, " => can't init global syslayer\n");
+      return error_upper;
     }
 
-  if (gamesystem != null && gamesystem->is_inited) game_terminate();
+  while (global != null && global->is_running == true)
+    {
+      /* code */
+    }
 
+  if (global != null) global_terminate();
+  if (syslayer != null) syslayer_terminate();
   return ok;
 }
-

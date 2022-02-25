@@ -1,10 +1,10 @@
 
-#ifndef GAME_STANDARD_INC
-#define GAME_STANDARD_INC
+#ifndef GAME_INCLUDE_STANDARD
+#define GAME_INCLUDE_STANDARD
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
-#endif /* GAME_STANDARD_INC */
+#endif /* GAME_INCLUDE_STANDARD */
