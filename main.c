@@ -1,7 +1,7 @@
 
-#include "system/standard.h"
-#include "system/types.h"
-#include "system/defines.h"
+#include "standard.h"
+#include "types.h"
+#include "defines.h"
 #include "system/system.h"
 
 
