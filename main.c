@@ -2,7 +2,7 @@
 #include "standard.h"
 #include "types.h"
 #include "defines.h"
-#include "system/system.h"
+#include "game/game.h"
 
 
 Int
@@ -13,18 +13,13 @@ main(None)
   RenderObject* player;
   Float player_speed = 0x0.1p-1;
   
-  if (syslayer_init() < ok)
-    {
-      fprintf(stderr, "error, can't init system layer\n");
-      return error_upper;
-    }
   if (game_init() < ok)
     {
       fprintf(stderr, "error, can't init game\n");
       return error_upper;
     }
 
-  player = game_create_object();
+  player = game_create_renderobject();
   
   gamesystem->is_running = true;
 
@@ -38,11 +33,13 @@ main(None)
       wish_dir.y = syslayer->keys[KEY_DOWN] - syslayer->keys[KEY_UP];
       player->rect.x += wish_dir.x * player_speed;
       
-      game_draw_objects();
+      game_draw_renderobjects();
       
       syslayer_draw_window();
       game_process_events();
     }
+
+  if (gamesystem != null && gamesystem->is_inited) game_terminate();
 
   return ok;
 }
