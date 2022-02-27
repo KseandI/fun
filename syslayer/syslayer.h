@@ -49,5 +49,6 @@ Int syslayer_terminate(None);
 EventType syslayer_read_event(Sysevent* event);
 Int syslayer_clear_window(GameColor color);
 Int syslayer_draw_window(None);
+Int syslayer_draw_rect(GameRect rect, GameColor color);
 
 #endif /* GAME_SYSTEM_INCLUDE */

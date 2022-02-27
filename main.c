@@ -63,6 +63,11 @@ main(None)
 {
   GameColor background_color = (GameColor)
     { .r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff };
+
+  GameRect player_rect = (GameRect)
+    { .x = 0x10, .y = 0x20, .w = 0x10, .h = 0x10 };
+  GameColor player_color = (GameColor)
+    { .r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff };
   
   if (syslayer_init() < ok)
     {
@@ -80,6 +85,8 @@ main(None)
   while (global != null && global->is_running == true)
     {
       syslayer_clear_window(background_color);
+
+      syslayer_draw_rect(player_rect, player_color);
         
       syslayer_draw_window();
       read_events();

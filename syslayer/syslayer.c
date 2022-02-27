@@ -111,3 +111,21 @@ syslayer_draw_window(None)
   
   return ok;
 }
+
+Int
+syslayer_draw_rect(GameRect rect, GameColor color)
+{
+  SDL_FRect sdlrect;
+  if (syslayer == null || syslayer->render == null)
+    {
+      fprintf(stderr, "warn, drawed on uninited render\n");
+      return warn_uninited;
+    }
+      
+  SDL_SetRenderDrawColor(syslayer->render, color.r, color.g, color.b, color.a);
+  
+  sdlrect = (SDL_FRect)
+    { .x = rect.x, .y = rect.y, .w = rect.w, .h = rect.h };
+  SDL_RenderFillRectF(syslayer->render, &sdlrect);
+  return ok;
+}
