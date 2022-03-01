@@ -4,6 +4,8 @@
 #include "types.h"
 #include "define.h"
 
+#include "cvote_test.h"
+
 typedef struct Global
 {
   Bool is_running;
@@ -59,6 +61,15 @@ read_events(None)
 }
 
 Int
+test_all(None)
+{
+  fprintf(stdout, " > testing all\n");
+  CVOTE_TEST_BEGIN();
+  CVOTE_TEST(test_syslayer);
+  CVOTE_TEST_END();
+}
+
+Int
 main(None)
 {
   GameColor background_color = (GameColor)
@@ -68,6 +79,10 @@ main(None)
     { .x = 0x10, .y = 0x20, .w = 0x10, .h = 0x10 };
   GameColor player_color = (GameColor)
     { .r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff };
+
+#ifdef DEBUG
+  if (test_all() != ok) return error_test;
+#endif
   
   if (syslayer_init() < ok)
     {

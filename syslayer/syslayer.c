@@ -56,6 +56,7 @@ syslayer_terminate(None)
   SDL_DestroyRenderer(syslayer->render);
   SDL_DestroyWindow(syslayer->window);
   free(syslayer);
+  syslayer = null;
   return ok;
 }
 
@@ -63,6 +64,13 @@ EventType
 syslayer_read_event(Sysevent* event)
 {
   SDL_Event sdl_event;
+
+  if (syslayer == null || syslayer->window == null)
+    {
+      fprintf(stderr, "warn, uninited syslayer for event reading\n");
+      return warn_uninited;
+    }
+  
   SDL_PollEvent(&sdl_event);
   switch (sdl_event.type)
     {

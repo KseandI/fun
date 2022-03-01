@@ -17,6 +17,7 @@ typedef void* Ptr;
 #define true 0x1
 #define false 0x0
 
+#define error_test -0x4
 #define error_system -0x3
 #define error_upper -0x2
 #define error_out_of_mem -0x1

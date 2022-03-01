@@ -17,26 +17,32 @@ test_syslayer_init(None)
 
   result = syslayer_init();
 
-  if (result != ok)
+  if (result < ok)
     {
-      fprintf(stderr, "test error on syslayer init\n"
-              "error code: %d\n", result);
+      fprintf(stderr,
+              " ==> error on syslayer init test, returned error\n"
+              " ==>> error code: %d\n", result);
       return fail;
     }
-  else if (syslayer == null)
+  if (result > ok)
     {
-      fprintf(stderr, "test error: on system initiallization no errors occurred\n"
-              "but syslayer is still null\n");
+      fprintf(stderr,
+              " ==> error on syslayer init test, returned warn\n"
+              " ==>> error code: %d\n", result);
       return fail;
     }
-  else
+  if (syslayer == null)
     {
-      fprintf(stderr, "syslayer inited successfully\n");
+      fprintf(stderr,
+              " ==> error on syslayer init test, returned ok, "
+              "but syslayer doesn't inited\n");
+      return fail;
     }
+  fprintf(stderr, " ==> no errors on syslayer init test\n");
   return ok;
 }
 
-Int
+Test
 test_syslayer_terminate(None)
 {
   Int result;
@@ -45,7 +51,7 @@ test_syslayer_terminate(None)
     syslayer_init();
   if (syslayer == null)
     {
-      fprintf(stderr, "error, can't init syslayer for termination test\n");
+      fprintf(stderr, " ==> error on syslayer termination test, can't init it\n");
       return fail;
     }
 
@@ -53,21 +59,35 @@ test_syslayer_terminate(None)
 
   if (result < ok)
     {
-      fprintf(stderr, "error, can't terminate syslayer\n"
-              "error code: %d\n", result);
+      fprintf(stderr, " ==> error on syslayer termination test, returned error\n"
+              " ==>> error code: %d\n", result);
       return fail;
     }
-  else if (result > ok)
+  if (result > ok)
     {
-      fprintf(stderr, "occurred some warning on system termination\n"
-              "warning code: %d\n", result);
+      fprintf(stderr, " ==> error on syslayer termination test, returned warn\n"
+              " ==>> warning code: %d\n", result);
       return fail;
     }
-  else
+  if (syslayer != null)
     {
-      fprintf(stderr, "no error occurred on system terminate\n");
+      fprintf(stderr, " ==> error on syslayer termination test, function doens't "
+              "cleared global variable\n");
+      return fail;
     }
+  
+  fprintf(stderr, " ==> no errors on syslayer termination test\n");
 
   return ok;
 }
 
+Test
+test_syslayer(None)
+{
+  fprintf(stdout, " => testing syslayer\n");
+  CVOTE_TEST_BEGIN();
+  CVOTE_TEST(test_syslayer_init);
+  CVOTE_TEST(test_syslayer_terminate);
+  CVOTE_TEST_END();
+  return ok;
+}

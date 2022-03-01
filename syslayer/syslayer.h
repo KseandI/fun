@@ -5,6 +5,7 @@
 #include "standard.h"
 #include "types.h"
 #include "define.h"
+#include "cvote_test.h"
 
 typedef enum EventType
   {
@@ -72,5 +73,10 @@ Int syslayer_set_pipeline_background(RenderPipeline* pipeline,
 Int syslayer_pipeline_add_object(RenderPipeline* pipeline,
                                  RenderObject* object);
 Int syslayer_pipeline_frame(RenderPipeline* pipeline);
+
+/* testing */
+Test test_syslayer_init(None);
+Test test_syslayer_terminate(None);
+Test test_syslayer(None);
 
 #endif /* GAME_SYSTEM_INCLUDE */
